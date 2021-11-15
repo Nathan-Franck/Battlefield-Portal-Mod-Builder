@@ -1,13 +1,33 @@
 type PortalMod = {
-    rules: Array<{
-        name: string,
-        eventType: "Ongoing" | "OnGameModeEnding" | "OnGameModeStarted" | "OnMandown" | "OnPlayerDeployed" | "OnPlayerDied" | "OnPlayerEarnedKill" | "OnPlayerIrreversiblyDead" | "OnPlayerJoinGame" | "OnPlayerLeaveGame" | "OnRevived" | "OnTimeLimitReached",
-        objectType: "Global" | "Player" | "Team",
-        conditions: Array<{
-        }>,
-        actions: Array<{
-        }>,
-    }>,
+    rules: Array<
+        & {
+            name: string,
+            conditions: Array<{
+            }>,
+            actions: Array<{
+            }>,
+        }
+        & (
+            | {
+                eventType:
+                | "OnGameModeEnding"
+                | "OnGameModeStarted"
+                | "OnMandown"
+                | "OnPlayerDeployed"
+                | "OnPlayerDied"
+                | "OnPlayerEarnedKill"
+                | "OnPlayerIrreversiblyDead"
+                | "OnPlayerJoinGame"
+                | "OnPlayerLeaveGame"
+                | "OnRevived"
+                | "OnTimeLimitReached",
+            }
+            | {
+                eventType: "Ongoing",
+                objectType: "Global" | "Player" | "Team",
+            }
+        )
+    >,
 };
 
 const exampleMod: PortalMod = {
@@ -94,7 +114,7 @@ function modToBlockly(mod: PortalMod): any {
                     field: [
                         { name: "NAME", value: rule.name },
                         { name: "EVENTTYPE", value: rule.eventType },
-                        { name: "OBJECTTYPE", value: rule.objectType },
+                        ...(rule.eventType != "Ongoing" ? [] : [{ name: "OBJECTTYPE", value: rule.objectType }]),
                     ],
                     statement: {
                         name: "CONDITIONS",
