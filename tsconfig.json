@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "sourceMap": true,
+        "module": "CommonJS",
+        "baseUrl": ".",
+        "jsx": "react",
+        "esModuleInterop": true,
+        "lib": ["es2019", "dom"],
+        "target": "ES6",
+        
+        "alwaysStrict": true,
+        // "strictNullChecks": true,
+        "noImplicitAny": true,
+        "noImplicitThis": true,
+        // "strictPropertyInitialization": true,
+        "preserveConstEnums": true
+    },
+    "exclude": []
+}
