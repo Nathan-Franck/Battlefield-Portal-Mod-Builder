@@ -40,6 +40,14 @@ const exampleMod: PortalMod = {
             ],
             actions: [
             ],
+        },
+        {
+            name: "Increment Score",
+            eventType: "OnPlayerEarnedKill",
+            conditions: [
+            ],
+            actions: [
+            ],
         }
     ]
 }
@@ -95,6 +103,12 @@ function blocklyToXML(key: string, json: any): string {
     return `<${key}${properties}>${children}</${key}>`;
 }
 
+function toLinkedList(key: string, array: any[]) {
+    return array
+        .reverse()
+        .reduce((result, current) => result == null ? current : ({ [key]: current, next: { [key]: result } }), null);
+}
+
 function modToBlockly(mod: PortalMod): any {
     const { rules } = mod;
     return {
@@ -106,7 +120,7 @@ function modToBlockly(mod: PortalMod): any {
             y: 0,
             statement: {
                 name: "RULES",
-                block: rules.map(rule => ({
+                ...toLinkedList("block", rules.map(rule => ({
                     type: "ruleBlock",
                     mutation: {
                         isOnGoingEvent: rule.eventType == "Ongoing"
@@ -120,7 +134,7 @@ function modToBlockly(mod: PortalMod): any {
                         name: "CONDITIONS",
                         block: [],
                     }
-                })),
+                }))),
             },
         },
     };
