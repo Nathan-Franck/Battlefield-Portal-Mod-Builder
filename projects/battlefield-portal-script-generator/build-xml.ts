@@ -111,7 +111,6 @@ type SoldierStateVector = (typeof playerStateAccessors[number] & { type: "Soldie
 type SoldierStateBool = (typeof playerStateAccessors[number] & { type: "SoldierStateBool" })["name"][number]
 type SoldierStateNumber = (typeof playerStateAccessors[number] & { type: "SoldierStateNumber" })["name"][number]
 
-
 type PortalMod = {
 	rules: Array<
 		& {
@@ -181,17 +180,15 @@ function parseValue(value: PortalValues): any {
 		const [type, parameters] = Object.entries(value)[0];
 		return {
 			type,
-			...(parameters != "object"
+			value: !Array.isArray(parameters)
 				? {
-					value: {
-						name: "VALUE-0",
-						block: parseValue(parameters),
-					},
+					name: "VALUE-0",
+					block: parseValue(parameters),
 				}
-				: toLinkedList("value", parameters.map((parameter: any, index: number) => ({
+				: parameters.map((parameter: any, index: number) => ({
 					name: `VALUE-${index}`,
 					block: parseValue(parameter),
-				})))),
+				})),
 		};
 	}
 	return { "error": true };
@@ -222,8 +219,11 @@ function modToBlockly(mod: PortalMod): any {
 						{
 							name: "CONDITIONS",
 							...toLinkedList("block", rule.conditions.map(condition => ({
-								block: "conditionBlock",
-								...parseValue(condition),
+								type: "conditionBlock",
+								value: {
+									name: "CONDITION",
+									block: parseValue(condition),
+								},
 							}))),
 						},
 						{
