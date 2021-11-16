@@ -46,7 +46,7 @@ type Booleans =
 	| { readonly Equals: readonly [Players, Players] }
 	| { readonly Equals: readonly [Numbers, Numbers] }
 	| { readonly LessThan: readonly [Numbers, Numbers] }
-	| { readonly GetPlayerState: readonly [Players, SoldierStateBool] }
+	| { readonly GetSoldierState: readonly [Players, SoldierStateBool] }
 	| boolean
 
 type Voids =
@@ -57,7 +57,7 @@ type Voids =
 	| { readonly SetTargetScore: Numbers }
 
 type Vectors =
-	{ readonly GetPlayerState: readonly [Players, SoldierStateVector] }
+	{ readonly GetSoldierState: readonly [Players, SoldierStateVector] }
 
 type PortalValues = Players | Numbers | Booleans | Voids | SoldierStateVector | SoldierStateBool | SoldierStateNumber;
 
@@ -148,9 +148,9 @@ function parseValue(value: PortalValues): any {
 		if (filteredAccessors.length > 0) {
 			const accessors = filteredAccessors[0];
 			return {
-				type: `${accessors.name}Item`,
+				type: `${accessors.type}Item`,
 				field: [
-					{ name: "VALUE-0", inner: accessors.name },
+					{ name: "VALUE-0", inner: accessors.type },
 					{ name: "VALUE-1", inner: value },
 				],
 			};
@@ -238,12 +238,12 @@ function modToBlockly(mod: PortalMod): any {
 	};
 }
 
-function PlayerPosition(player: Players): Vectors { return { GetPlayerState: [player, "GetPosition"] } };
+function PlayerPosition(player: Players): Vectors { return { GetSoldierState: [player, "GetPosition"] } };
 
 function ClosestPlayerDistance(player: Players): Numbers {
 	return {
 		DistanceBetween: [
-			{ GetPlayerState: [{ ClosestPlayerTo: PlayerPosition(player) }, "GetPosition"] },
+			{ GetSoldierState: [{ ClosestPlayerTo: PlayerPosition(player) }, "GetPosition"] },
 			PlayerPosition(player)
 		]
 	};
