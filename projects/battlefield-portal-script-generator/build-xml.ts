@@ -34,9 +34,10 @@ type Players =
 	| { readonly ClosestPlayerTo: Vectors }
 
 type Numbers =
-	| "GetGameModeTargetScore"
-	| { readonly GetGameModeScore: Players }
+	| "GetTargetScore"
+	| { readonly GetGamemodeScore: Players }
 	| { readonly DistanceBetween: readonly [Vectors, Vectors] }
+	| { readonly Add: readonly [Numbers, Numbers] }
 	| number
 
 type Booleans =
@@ -50,7 +51,7 @@ type Booleans =
 
 type Voids =
 	| { readonly SetGameModeScore: readonly [Players, Numbers] }
-	| { readonly EndGameMode: Players }
+	| { readonly EndRound: Players }
 	| { readonly EnableDefaultScoring: Booleans }
 	| { readonly SetRoundTimeLimit: Numbers }
 	| { readonly SetTargetScore: Numbers }
@@ -163,7 +164,7 @@ function parseValue(value: PortalValues): any {
 			type: "Number",
 			field: {
 				name: "NUM",
-				inner: 900,
+				inner: value,
 			},
 		};
 	}
@@ -267,20 +268,31 @@ const exampleMod: PortalMod = {
 			name: "Increment Score",
 			eventType: "OnPlayerEarnedKill",
 			conditions: [
-				{ Equals: [{ GetGameModeScore: "EventPlayer" }, "GetGameModeTargetScore"] },
+				{ NotEqualTo: ["EventPlayer", "EventOtherPlayer"] },
 			],
 			actions: [
-				{ EndGameMode: "EventPlayer" }
+				{ SetGameModeScore: ["EventPlayer", { Add: [{ GetGamemodeScore: "EventPlayer" }, 1] }] },
+			],
+		},
+		{
+			name: "Check Win Condition",
+			eventType: "OnPlayerEarnedKill",
+			conditions: [
+				{ Equals: [{ GetGamemodeScore: "EventPlayer" }, "GetTargetScore"] },
+			],
+			actions: [
+				{ EndRound: "EventPlayer" }
 			],
 		},
 		{
 			name: "Proximity Tag",
-			eventType: "OnPlayerEarnedKill",
+			eventType: "Ongoing",
+			objectType: "Player",
 			conditions: [
 				{ LessThan: [ClosestPlayerDistance("EventPlayer"), 1] }
 			],
 			actions: [
-				{ EndGameMode: "EventPlayer" }
+				{ EndRound: "EventPlayer" }
 			],
 		}
 	],
