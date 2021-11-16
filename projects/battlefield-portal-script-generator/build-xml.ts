@@ -1,116 +1,77 @@
-function blocklyToXML(key: string, json: any): string {
-	if (Array.isArray(json)) {
-		return json.reduce((result, next) => {
-			const contents = blocklyToXML(key, next);
-			return result != ""
-				? `${result}${contents}`
-				: contents;
-		}, "")
-	}
-	const entries = Object.entries(json);
-	const properties = entries
-		.filter(([key, value]) => key != "inner" && typeof value != "object")
-		.map(([key, value]) => ` ${key}="${value.toString()}"`).join("");
-	const children = "inner" in json
-		? json.inner
-		: entries
-			.filter(([_, value]) => typeof value == "object")
-			.map(([key, value]) => blocklyToXML(key, value))
-			.join("");
-	return `<${key}${properties}>${children}</${key}>`;
-}
-
-function toLinkedList(key: string, array: any[]) {
-	return {
-		[key]: array
-			.reverse()
-			.reduce((result, current) => result == null ? current : ({ ...current, next: { [key]: result } }), null)
-	};
-}
-
 type Players =
 	| "EventPlayer"
 	| "EventOtherPlayer"
-	| { readonly ClosestPlayerTo: Vectors }
+	| { ClosestPlayerTo: Vectors }
 
 type Numbers =
 	| "GetTargetScore"
-	| { readonly GetGamemodeScore: Players }
-	| { readonly DistanceBetween: readonly [Vectors, Vectors] }
-	| { readonly Add: readonly [Numbers, Numbers] }
+	| { GetGamemodeScore: Players }
+	| { DistanceBetween: [Vectors, Vectors] }
+	| { Add: [Numbers, Numbers] }
 	| number
 
 type Booleans =
-	| { readonly NotEqualTo: readonly [Players, Players] }
-	| { readonly NotEqualTo: readonly [Numbers, Numbers] }
-	| { readonly Equals: readonly [Players, Players] }
-	| { readonly Equals: readonly [Numbers, Numbers] }
-	| { readonly LessThan: readonly [Numbers, Numbers] }
-	| { readonly GetSoldierState: readonly [Players, SoldierStateBool] }
+	| { NotEqualTo: [Players, Players] }
+	| { NotEqualTo: [Numbers, Numbers] }
+	| { Equals: [Players, Players] }
+	| { Equals: [Numbers, Numbers] }
+	| { LessThan: [Numbers, Numbers] }
+	| { GetSoldierState: [Players, SoldierStateBool] }
 	| boolean
 
 type Voids =
-	| { readonly SetGamemodeScore: readonly [Players, Numbers] }
-	| { readonly EndRound: Players }
-	| { readonly EnableDefaultScoring: Booleans }
-	| { readonly SetRoundTimeLimit: Numbers }
-	| { readonly SetTargetScore: Numbers }
+	| { SetGamemodeScore: [Players, Numbers] }
+	| { EndRound: Players }
+	| { EnableDefaultScoring: Booleans }
+	| { SetRoundTimeLimit: Numbers }
+	| { SetTargetScore: Numbers }
 
 type Vectors =
-	{ readonly GetSoldierState: readonly [Players, SoldierStateVector] }
+	{ GetSoldierState: [Players, SoldierStateVector] }
 
 type PortalValues = Players | Numbers | Booleans | Voids | SoldierStateVector | SoldierStateBool | SoldierStateNumber;
 
-const playerStateAccessors = <const>[
-	{
-		type: "SoldierStateVector",
-		name: [
-			"GetPosition",
-			"GetLinearVelocity"
-		],
-	},
-	{
-		type: "SoldierStateBool",
-		name: [
-			"IsAISoldier",
-			"IsAlive",
-			"IsBeingRevived",
-			"IsCrouching",
-			"IsDead",
-			"IsFiring",
-			"IsInAir",
-			"IsInteracting",
-			"IsInVehicle",
-			"IsInWater",
-			"IsJumping",
-			"IsMandown",
-			"IsOnGround",
-			"IsParachuting",
-			"IsProne",
-			"IsReloading",
-			"IsReviving",
-			"IsSprinting",
-			"IsStanding",
-			"IsVaulting",
-			"IsZooming",
-		],
-	},
-	{
-		type: "SoldierStateNumber",
-		name: [
-			"CurrentHealth",
-			"CurrentInventoryAmmo",
-			"CurrentInventoryMagazineAmmo",
-			"MaxHealth",
-			"NormalizedHealth",
-			"Speed",
-		],
-	}
-];
+const playerStateAccessors = {
+	SoldierStateVector: [
+		"GetPosition",
+		"GetLinearVelocity"
+	],
+	SoldierStateBool: [
+		"IsAISoldier",
+		"IsAlive",
+		"IsBeingRevived",
+		"IsCrouching",
+		"IsDead",
+		"IsFiring",
+		"IsInAir",
+		"IsInteracting",
+		"IsInVehicle",
+		"IsInWater",
+		"IsJumping",
+		"IsMandown",
+		"IsOnGround",
+		"IsParachuting",
+		"IsProne",
+		"IsReloading",
+		"IsReviving",
+		"IsSprinting",
+		"IsStanding",
+		"IsVaulting",
+		"IsZooming",
+	],
+	SoldierStateNumber: [
+		"CurrentHealth",
+		"CurrentInventoryAmmo",
+		"CurrentInventoryMagazineAmmo",
+		"MaxHealth",
+		"NormalizedHealth",
+		"Speed",
+	],
+} as const;
 
-type SoldierStateVector = (typeof playerStateAccessors[number] & { type: "SoldierStateVector" })["name"][number];
-type SoldierStateBool = (typeof playerStateAccessors[number] & { type: "SoldierStateBool" })["name"][number]
-type SoldierStateNumber = (typeof playerStateAccessors[number] & { type: "SoldierStateNumber" })["name"][number]
+type SoldierStateVector = typeof playerStateAccessors["SoldierStateVector"][number];
+type SoldierStateBool = typeof playerStateAccessors["SoldierStateBool"][number]
+type SoldierStateNumber = typeof playerStateAccessors["SoldierStateNumber"][number]
 
 type PortalMod = {
 	rules: Array<
@@ -144,13 +105,15 @@ type PortalMod = {
 
 function parseValue(value: PortalValues): any {
 	if (typeof value == "string") {
-		const filteredAccessors = playerStateAccessors.filter(accessors => accessors.name.findIndex(name => name == value) >= 0)
+		const filteredAccessors = Object
+			.entries(playerStateAccessors)
+			.filter(([key, names]) => names.findIndex(name => name == value) >= 0)
 		if (filteredAccessors.length > 0) {
-			const accessors = filteredAccessors[0];
+			const [type] = filteredAccessors[0];
 			return {
-				type: `${accessors.type}Item`,
+				type: `${type}Item`,
 				field: [
-					{ name: "VALUE-0", inner: accessors.type },
+					{ name: "VALUE-0", inner: type },
 					{ name: "VALUE-1", inner: value },
 				],
 			};
@@ -195,6 +158,14 @@ function parseValue(value: PortalValues): any {
 	return { "error": true };
 }
 
+function toLinkedList(key: string, array: any[]) {
+	return {
+		[key]: array
+			.reverse()
+			.reduce((result, current) => result == null ? current : ({ ...current, next: { [key]: result } }), null)
+	};
+}
+
 function modToBlockly(mod: PortalMod): any {
 	const { rules } = mod;
 	return {
@@ -236,6 +207,28 @@ function modToBlockly(mod: PortalMod): any {
 			},
 		},
 	};
+}
+
+function blocklyToXML(key: string, json: any): string {
+	if (Array.isArray(json)) {
+		return json.reduce((result, next) => {
+			const contents = blocklyToXML(key, next);
+			return result != ""
+				? `${result}${contents}`
+				: contents;
+		}, "")
+	}
+	const entries = Object.entries(json);
+	const properties = entries
+		.filter(([key, value]) => key != "inner" && typeof value != "object")
+		.map(([key, value]) => ` ${key}="${value.toString()}"`).join("");
+	const children = "inner" in json
+		? json.inner
+		: entries
+			.filter(([_, value]) => typeof value == "object")
+			.map(([key, value]) => blocklyToXML(key, value))
+			.join("");
+	return `<${key}${properties}>${children}</${key}>`;
 }
 
 function PlayerPosition(player: Players): Vectors { return { GetSoldierState: [player, "GetPosition"] } };
