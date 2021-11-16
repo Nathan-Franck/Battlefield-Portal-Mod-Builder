@@ -107,7 +107,7 @@ function parseValue(value: PortalValues): any {
 	if (typeof value == "string") {
 		const filteredAccessors = Object
 			.entries(playerStateAccessors)
-			.filter(([key, names]) => names.findIndex(name => name == value) >= 0)
+			.filter(([_, names]) => names.findIndex(name => name == value) >= 0)
 		if (filteredAccessors.length > 0) {
 			const [type] = filteredAccessors[0];
 			return {
@@ -236,7 +236,7 @@ function PlayerPosition(player: Players): Vectors { return { GetSoldierState: [p
 function ClosestPlayerDistance(player: Players): Numbers {
 	return {
 		DistanceBetween: [
-			{ GetSoldierState: [{ ClosestPlayerTo: PlayerPosition(player) }, "GetPosition"] },
+			PlayerPosition({ ClosestPlayerTo: PlayerPosition(player) }),
 			PlayerPosition(player)
 		]
 	};
