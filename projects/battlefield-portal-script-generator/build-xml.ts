@@ -50,7 +50,7 @@ type Booleans =
 	| boolean
 
 type Voids =
-	| { readonly SetGameModeScore: readonly [Players, Numbers] }
+	| { readonly SetGamemodeScore: readonly [Players, Numbers] }
 	| { readonly EndRound: Players }
 	| { readonly EnableDefaultScoring: Booleans }
 	| { readonly SetRoundTimeLimit: Numbers }
@@ -271,7 +271,7 @@ const exampleMod: PortalMod = {
 				{ NotEqualTo: ["EventPlayer", "EventOtherPlayer"] },
 			],
 			actions: [
-				{ SetGameModeScore: ["EventPlayer", { Add: [{ GetGamemodeScore: "EventPlayer" }, 1] }] },
+				{ SetGamemodeScore: ["EventPlayer", { Add: [{ GetGamemodeScore: "EventPlayer" }, 1] }] },
 			],
 		},
 		{
