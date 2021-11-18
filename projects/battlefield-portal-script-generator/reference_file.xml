@@ -1,6 +1,6 @@
 <xml xmlns="https://developers.google.com/blockly/xml">
     <variables>
-        <variable type="Player" id="Ea#E@+_Qz.!HpR|8P(~o">thinger</variable>
+        <variable type="TeamId" id="1yWt/*Pu%JwFj%%moLmI">what</variable>
     </variables>
     <block type="modBlock" deletable="false" x="0" y="0">
         <statement name="RULES">
@@ -187,7 +187,7 @@
                                         </statement>
                                         <statement name="ACTIONS">
                                             <block type="If">
-                                                <mutation elseif="2" else="1"></mutation>
+                                                <mutation elseif="1" else="1"></mutation>
                                                 <value name="VALUE-0">
                                                     <block type="LessThan">
                                                         <value name="VALUE-0">
@@ -269,27 +269,6 @@
                                                         </value>
                                                     </block>
                                                 </statement>
-                                                <value name="IF2">
-                                                    <block type="Equals">
-                                                        <value name="VALUE-0">
-                                                            <block type="GetGamemodeScore">
-                                                                <value name="VALUE-0">
-                                                                    <block type="EventPlayer"></block>
-                                                                </value>
-                                                            </block>
-                                                        </value>
-                                                        <value name="VALUE-1">
-                                                            <block type="GetTargetScore"></block>
-                                                        </value>
-                                                    </block>
-                                                </value>
-                                                <statement name="DO2">
-                                                    <block type="EndRound">
-                                                        <value name="VALUE-0">
-                                                            <block type="EventPlayer"></block>
-                                                        </value>
-                                                    </block>
-                                                </statement>
                                                 <statement name="ELSE">
                                                     <block type="EndRound">
                                                         <value name="VALUE-0">
@@ -302,10 +281,10 @@
                                                         <value name="VALUE-0">
                                                             <block type="variableReferenceBlock">
                                                                 <mutation isObjectVar="true"></mutation>
-                                                                <field name="OBJECTTYPE">Player</field>
-                                                                <field name="VAR" id="Ea#E@+_Qz.!HpR|8P(~o" variabletype="Player">thinger</field>
+                                                                <field name="OBJECTTYPE">TeamId</field>
+                                                                <field name="VAR" id="1yWt/*Pu%JwFj%%moLmI" variabletype="TeamId">what</field>
                                                                 <value name="OBJECT">
-                                                                    <block type="EventPlayer"></block>
+                                                                    <block type="GetTeamId"></block>
                                                                 </value>
                                                             </block>
                                                         </value>
@@ -325,26 +304,77 @@
                                                             </block>
                                                         </value>
                                                         <statement name="DO">
-                                                            <block type="Continue">
+                                                            <block type="EndRound">
+                                                                <value name="VALUE-0">
+                                                                    <block type="EventPlayer"></block>
+                                                                </value>
                                                                 <next>
-                                                                    <block type="EndRound">
-                                                                        <value name="VALUE-0">
-                                                                            <block type="EventPlayer"></block>
-                                                                        </value>
-                                                                    </block>
+                                                                    <block type="Continue"></block>
                                                                 </next>
                                                             </block>
                                                         </statement>
                                                         <next>
                                                             <block type="While">
-                                                                <statement name="DO">
-                                                                    <block type="Break">
-                                                                        <next>
-                                                                            <block type="EndRound">
+                                                                <value name="VALUE-0">
+                                                                    <block type="LessThan">
+                                                                        <value name="VALUE-0">
+                                                                            <block type="DistanceBetween">
                                                                                 <value name="VALUE-0">
-                                                                                    <block type="EventPlayer"></block>
+                                                                                    <block type="GetSoldierState">
+                                                                                        <value name="VALUE-0">
+                                                                                            <block type="ClosestPlayerTo">
+                                                                                                <value name="VALUE-0">
+                                                                                                    <block type="GetSoldierState">
+                                                                                                        <value name="VALUE-0">
+                                                                                                            <block type="EventPlayer"></block>
+                                                                                                        </value>
+                                                                                                        <value name="VALUE-1">
+                                                                                                            <block type="SoldierStateVectorItem">
+                                                                                                                <field name="VALUE-0">SoldierStateVector</field>
+                                                                                                                <field name="VALUE-1">GetPosition</field>
+                                                                                                            </block>
+                                                                                                        </value>
+                                                                                                    </block>
+                                                                                                </value>
+                                                                                            </block>
+                                                                                        </value>
+                                                                                        <value name="VALUE-1">
+                                                                                            <block type="SoldierStateVectorItem">
+                                                                                                <field name="VALUE-0">SoldierStateVector</field>
+                                                                                                <field name="VALUE-1">GetPosition</field>
+                                                                                            </block>
+                                                                                        </value>
+                                                                                    </block>
+                                                                                </value>
+                                                                                <value name="VALUE-1">
+                                                                                    <block type="GetSoldierState">
+                                                                                        <value name="VALUE-0">
+                                                                                            <block type="EventPlayer"></block>
+                                                                                        </value>
+                                                                                        <value name="VALUE-1">
+                                                                                            <block type="SoldierStateVectorItem">
+                                                                                                <field name="VALUE-0">SoldierStateVector</field>
+                                                                                                <field name="VALUE-1">GetPosition</field>
+                                                                                            </block>
+                                                                                        </value>
+                                                                                    </block>
                                                                                 </value>
                                                                             </block>
+                                                                        </value>
+                                                                        <value name="VALUE-1">
+                                                                            <block type="Number">
+                                                                                <field name="NUM">1</field>
+                                                                            </block>
+                                                                        </value>
+                                                                    </block>
+                                                                </value>
+                                                                <statement name="DO">
+                                                                    <block type="EndRound">
+                                                                        <value name="VALUE-0">
+                                                                            <block type="EventPlayer"></block>
+                                                                        </value>
+                                                                        <next>
+                                                                            <block type="Break"></block>
                                                                         </next>
                                                                     </block>
                                                                 </statement>
@@ -363,4 +393,6 @@
             </block>
         </statement>
     </block>
+    <block type="EventPlayer" x="652" y="1440"></block>
+    <block type="EventTeam" x="523" y="1478"></block>
 </xml>

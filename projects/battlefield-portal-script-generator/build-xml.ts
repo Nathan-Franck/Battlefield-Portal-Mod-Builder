@@ -30,7 +30,7 @@ type Voids =
 	| { SetRoundTimeLimit: Numbers }
 	| { SetTargetScore: Numbers }
 	| { If: Booleans, Then: Voids[] }
-	| [{ If: Booleans, Then: Voids[] }, ...{ ElseIf: Booleans, Then: Voids[] }[], { Else: Voids[] }]
+	| [{ If: Booleans, Do: Voids[] }, ...{ If: Booleans, Do: Voids[] }[], { Else: Voids[] }]
 	| { LoopVariable: [Variable, { from: Numbers, to: Numbers, by: Numbers }], Do: Voids[] }
 	| { While: Booleans, Do: Voids[] }
 
@@ -298,15 +298,14 @@ const exampleMod: PortalMod = {
 				{ LessThan: [ClosestPlayerDistance("EventPlayer"), 1] }
 			],
 			actions: [
-				{ EndRound: "EventPlayer" },
 				[
 					{
 						If: { LessThan: [ClosestPlayerDistance("EventPlayer"), 1] },
-						Then: [{ EndRound: "EventPlayer" }],
+						Do: [{ EndRound: "EventPlayer" }],
 					},
 					{
-						ElseIf: { Equals: [{ GetGamemodeScore: "EventPlayer" }, "GetTargetScore"] },
-						Then: [{ EndRound: "EventPlayer" }],
+						If: { Equals: [{ GetGamemodeScore: "EventPlayer" }, "GetTargetScore"] },
+						Do: [{ EndRound: "EventPlayer" }],
 					},
 					{ Else: [{ EndRound: "EventPlayer" }] },
 				],
