@@ -32,18 +32,14 @@ type Voids =
 	| { EnableDefaultScoring: Booleans }
 	| { SetRoundTimeLimit: Numbers }
 	| { SetTargetScore: Numbers }
-
-	//TODO
 	| { If: Booleans, Do: Voids[] }
 	| { If: Booleans, Do: Voids[], Else: Voids[] }
-	// | [{ If: Booleans, Do: Voids[] }, ...{ If: Booleans, Do: Voids[] }[], { Else: Voids[] }] // This case breaks how the intermediate json is formatted --- just leave unsupported?
-	| { LoopVariable: [Variable, { from: Numbers, to: Numbers, by: Numbers }], Do: Voids[] }
 	| { While: Booleans, Do: Voids[] }
 	| "Break"
 	| "Continue"
 
-	// ALTERNATIVES
-	| { If: [Booleans, { Do: Voids[] }] }
+	//TODO
+	| { ForVariable: [variable: Variable, from: Numbers, to: Numbers, by: Numbers], Do: Voids[] }
 
 const statementBlocks = [
 	"Rules",
@@ -53,8 +49,16 @@ const statementBlocks = [
 	"Else",
 ] as const;
 
+const mutationFactors = [
+	"Else"
+] as const;
+
 function isStatement(candidate: string) {
 	return statementBlocks.findIndex(statement => statement == candidate) >= 0;
+}
+
+function isMutationFactor(candidate: string) {
+	return mutationFactors.findIndex(mutation => mutation == candidate) >= 0;
 }
 
 type Variable =
@@ -148,6 +152,7 @@ function parseValue(value: PortalValues): any {
 			const [type] = filteredAccessors[0];
 			return {
 				type: `${type}Item`,
+				id: generateID(),
 				field: [
 					{ name: "VALUE-0", inner: type },
 					{ name: "VALUE-1", inner: value },
@@ -156,11 +161,13 @@ function parseValue(value: PortalValues): any {
 		}
 		return {
 			type: value,
+			id: generateID(),
 		};
 	}
 	if (typeof value == "number") {
 		return {
 			type: "Number",
+			id: generateID(),
 			field: {
 				name: "NUM",
 				inner: value,
@@ -170,6 +177,7 @@ function parseValue(value: PortalValues): any {
 	if (typeof value == "boolean") {
 		return {
 			type: "Boolean",
+			id: generateID(),
 			field: {
 				name: "BOOL",
 				inner: `${value}`.toUpperCase(),
@@ -178,26 +186,35 @@ function parseValue(value: PortalValues): any {
 	}
 	if (typeof value == "object") {
 		const entries = Object.entries(value);
-		let { type, parameters, statements } = (() => {
+		let { type, parameters, statements, mutation } = (() => {
 			if (entries.length == 1) {
 				const [type, parameters] = entries[0];
-				return { type, parameters, statements: [] };
+				return { type, parameters, statements: [], mutation: [] };
 			} else {
 				const [type, parameters] = entries.find(([type]) => !isStatement(type));
 				const statements = entries.filter(([type]) => isStatement(type));
-				return { type, parameters, statements };
+				const mutation = statements
+					.map(([type]) => type)
+					.filter(isMutationFactor)
+					.reduce((counts, type) => ({
+						...counts,
+						[type.toLowerCase()]: type in counts ? counts[type] + 1 : 1
+					}), {} as any)
+				return { type, parameters, statements, mutation };
 			}
 		})();
 		if (!Array.isArray(parameters)) parameters = [parameters];
 		return {
 			type,
+			id: generateID(),
+			...(Object.entries(mutation).length == 0 ? {} : { mutation }),
 			value: parameters.map((parameter: any, index: number) => ({
 				name: `VALUE-${index}`,
 				block: parseValue(parameter),
 			})),
 			statement: statements.map(([type, contents]: any) => ({
 				name: type.toUpperCase(),
-				block: parseValue(contents),
+				...toLinkedList("block", contents.map(parseValue)),
 			}))
 		};
 	}
@@ -212,15 +229,18 @@ function toLinkedList(key: string, array: any[]) {
 	};
 }
 
+function generateID() {
+	return (Math.random() + 1).toString(36).substring(2); // Credit - https://stackoverflow.com/questions/1349404/generate-random-string-characters-in-javascript
+}
+
 function modToBlockly(mod: PortalMod): any {
 	const { rules } = mod;
 	return {
-		xmlns: "https://developers.google.com/blockly/xml",
 		block: {
+			xmlns: "https://developers.google.com/blockly/xml",
 			type: "modBlock",
+			id: generateID(),
 			deletable: false,
-			x: 0,
-			y: 0,
 			statement: {
 				name: "RULES",
 				...toLinkedList("block", rules.map(rule => ({
@@ -255,25 +275,31 @@ function modToBlockly(mod: PortalMod): any {
 	};
 }
 
-function blocklyToXML(key: string, json: any): string {
+function blocklyToXML(json: any): string {
+	const children = "inner" in json
+		? json.inner
+		: Object
+			.entries(json)
+			.filter(([_, value]) => typeof value == "object")
+			.map(([key, value]) => blocklyToXMLInner(key, value))
+			.join("");
+	return children;
+}
+
+function blocklyToXMLInner(key: string, json: any): string {
 	if (Array.isArray(json)) {
 		return json.reduce((result, next) => {
-			const contents = blocklyToXML(key, next);
+			const contents = blocklyToXMLInner(key, next);
 			return result != ""
 				? `${result}${contents}`
 				: contents;
 		}, "")
 	}
-	const entries = Object.entries(json);
-	const properties = entries
+	const properties = Object
+		.entries(json)
 		.filter(([key, value]) => key != "inner" && typeof value != "object")
 		.map(([key, value]) => ` ${key}="${value.toString()}"`).join("");
-	const children = "inner" in json
-		? json.inner
-		: entries
-			.filter(([_, value]) => typeof value == "object")
-			.map(([key, value]) => blocklyToXML(key, value))
-			.join("");
+	const children = blocklyToXML(json);
 	return `<${key}${properties}>${children}</${key}>`;
 }
 
@@ -321,22 +347,21 @@ const exampleMod: PortalMod = {
 			actions: [
 				{ If: true, Do: [{ EndRound: "EventPlayer" }] },
 				{ If: true, Do: [{ EndRound: "EventPlayer" }], Else: [{ EndRound: "EventPlayer" }] },
-				// [{ If: true, Do: [{ EndRound: "EventPlayer" }] }, { If: true, Do: [{ EndRound: "EventPlayer" }] }, { Else: [{ EndRound: "EventPlayer" }] }],
-				{
-					LoopVariable: [{ type: "Global", variable: "TestVar" }, { from: 0, to: 10, by: 1 }], Do: [
-						{ EndRound: "EventPlayer" },
-						"Break",
-						"Continue",
-					]
-				},
-				{ While: true, Do: [{ EndRound: "EventPlayer" }] },
+				// {
+				// 	ForVariable: [{ type: "Global", variable: "TestVar" }, 0, 10, 1], Do: [
+				// 		{ EndRound: "EventPlayer" },
+				// 		"Break",
+				// 		"Continue",
+				// 	]
+				// },
+				{ While: true, Do: [{ EndRound: "EventPlayer" }, "Break", "Continue"] },
 			]
 		}
 	],
 };
 
 const blocklyOutput = modToBlockly(exampleMod);
-const xmlOutput = blocklyToXML("xml", blocklyOutput);
+const xmlOutput = blocklyToXML(blocklyOutput);
 
 (async () => {
 	await new Promise(resolve => fs.writeFile('output-intermediate.json', JSON.stringify(blocklyOutput, null, 4), resolve));
