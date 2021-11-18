@@ -29,10 +29,10 @@ type Voids =
 	| { EnableDefaultScoring: Booleans }
 	| { SetRoundTimeLimit: Numbers }
 	| { SetTargetScore: Numbers }
-	| { If: Booleans, Then: Voids | Voids[] }
-	| [{ If: Booleans, Then: Voids | Voids[] }, ...{ ElseIf: Booleans, Then: Voids | Voids[] }[], { Else: Voids | Voids[] }]
-	| { LoopVariable: [Variable, { from: Numbers, to: Numbers, by: Numbers }], Do: Voids | Voids[] }
-	| { While: Booleans, Do: Voids | Voids[] }
+	| { If: Booleans, Then: Voids[] }
+	| [{ If: Booleans, Then: Voids[] }, ...{ ElseIf: Booleans, Then: Voids[] }[], { Else: Voids[] }]
+	| { LoopVariable: [Variable, { from: Numbers, to: Numbers, by: Numbers }], Do: Voids[] }
+	| { While: Booleans, Do: Voids[] }
 
 type Variable =
 	| { type: "Global", variable: string }
@@ -302,24 +302,24 @@ const exampleMod: PortalMod = {
 				[
 					{
 						If: { LessThan: [ClosestPlayerDistance("EventPlayer"), 1] },
-						Then: { EndRound: "EventPlayer" },
+						Then: [{ EndRound: "EventPlayer" }],
 					},
 					{
 						ElseIf: { Equals: [{ GetGamemodeScore: "EventPlayer" }, "GetTargetScore"] },
-						Then: { EndRound: "EventPlayer" },
+						Then: [{ EndRound: "EventPlayer" }],
 					},
-					{ Else: { EndRound: "EventPlayer" } },
+					{ Else: [{ EndRound: "EventPlayer" }] },
 				],
 				{
 					LoopVariable: [
 						{ type: "Team", variable: "what", for: "EventTeam" },
 						{ from: 0, to: 3, by: 1 }
 					],
-					Do: { EndRound: "EventPlayer" }
+					Do: [{ EndRound: "EventPlayer" }]
 				},
 				{
 					While: { LessThan: [ClosestPlayerDistance("EventPlayer"), 1] },
-					Do: { EndRound: "EventPlayer" }
+					Do: [{ EndRound: "EventPlayer" }]
 				},
 			],
 		}
