@@ -100,60 +100,84 @@
                           </block>
                         </statement>
                         <next>
-                          <block type="ForVariable" id="D6*{]Ka=vuuLs.7l$nwD">
+                          <block type="If" id="uP2.LqfnV4~uB@7Wg6c7">
+                            <mutation else="1"></mutation>
                             <value name="VALUE-0">
-                              <block type="variableReferenceBlock" id="Ak~VOlz7MOb#cb=J`Jf]">
-                                <mutation isObjectVar="false"></mutation>
-                                <field name="OBJECTTYPE">Global</field>
-                                <field name="VAR" id="6Y@J2+(pf4pn8(g6jb`6" variabletype="Global">TestVar</field>
-                              </block>
-                            </value>
-                            <value name="VALUE-1">
-                              <block type="Number" id="_9@@|R{)EU6|O[Sl*(]3">
-                                <field name="NUM">0</field>
-                              </block>
-                            </value>
-                            <value name="VALUE-2">
-                              <block type="Number" id="3N|]7^q./SDgZ/Do:4,U">
-                                <field name="NUM">10</field>
-                              </block>
-                            </value>
-                            <value name="VALUE-3">
-                              <block type="Number" id="`9z1kA=U00S#Tl!!l%vh">
-                                <field name="NUM">1</field>
+                              <block type="Boolean" id="Y*lX$4w5+j$9[9r])K-?">
+                                <field name="BOOL">TRUE</field>
                               </block>
                             </value>
                             <statement name="DO">
-                              <block type="EndRound" id="$c/BedTV*37i${M=BlKk">
+                              <block type="EndRound" id="^JE?vof!n-x.IL3q3s/.">
                                 <value name="VALUE-0">
-                                  <block type="EventPlayer" id=".#)#J-]$?zeB?%v@gP:H"></block>
+                                  <block type="EventPlayer" id="1omjVP?Tzm;D/E_+vyWa"></block>
                                 </value>
-                                <next>
-                                  <block type="Break" id="WNOKb5[[70r`%iUMT@+g">
-                                    <next>
-                                      <block type="Continue" id="Q@F8ku:MhGqslj`n6NPM"></block>
-                                    </next>
-                                  </block>
-                                </next>
+                              </block>
+                            </statement>
+                            <statement name="ELSE">
+                              <block type="EndRound" id="[JoFEU~c~)-ZUxY`ht.@">
+                                <value name="VALUE-0">
+                                  <block type="EventPlayer" id="YmcWLsUtRcDb2Ji[e^Ps"></block>
+                                </value>
                               </block>
                             </statement>
                             <next>
-                              <block type="While" id="1,gItep*RW6(LVDV5MYI">
+                              <block type="ForVariable" id="D6*{]Ka=vuuLs.7l$nwD">
                                 <value name="VALUE-0">
-                                  <block type="Boolean" id="4THjPttsMWr7X+4H*.wZ">
-                                    <field name="BOOL">TRUE</field>
+                                  <block type="variableReferenceBlock" id="Ak~VOlz7MOb#cb=J`Jf]">
+                                    <mutation isObjectVar="false"></mutation>
+                                    <field name="OBJECTTYPE">Global</field>
+                                    <field name="VAR" id="6Y@J2+(pf4pn8(g6jb`6" variabletype="Global">TestVar</field>
+                                  </block>
+                                </value>
+                                <value name="VALUE-1">
+                                  <block type="Number" id="_9@@|R{)EU6|O[Sl*(]3">
+                                    <field name="NUM">0</field>
+                                  </block>
+                                </value>
+                                <value name="VALUE-2">
+                                  <block type="Number" id="3N|]7^q./SDgZ/Do:4,U">
+                                    <field name="NUM">10</field>
+                                  </block>
+                                </value>
+                                <value name="VALUE-3">
+                                  <block type="Number" id="`9z1kA=U00S#Tl!!l%vh">
+                                    <field name="NUM">1</field>
                                   </block>
                                 </value>
                                 <statement name="DO">
-                                  <block type="EndRound" id="/?nTFz^{x%tnl]ldYxz*">
+                                  <block type="EndRound" id="$c/BedTV*37i${M=BlKk">
                                     <value name="VALUE-0">
-                                      <block type="EventPlayer" id="aaXRL5x]i?_s5CYROsie"></block>
+                                      <block type="EventPlayer" id=".#)#J-]$?zeB?%v@gP:H"></block>
                                     </value>
                                     <next>
-                                      <block type="Continue" id=";`0!)L7O;xkY(@a,0{fS"></block>
+                                      <block type="Break" id="WNOKb5[[70r`%iUMT@+g">
+                                        <next>
+                                          <block type="Continue" id="Q@F8ku:MhGqslj`n6NPM"></block>
+                                        </next>
+                                      </block>
                                     </next>
                                   </block>
                                 </statement>
+                                <next>
+                                  <block type="While" id="1,gItep*RW6(LVDV5MYI">
+                                    <value name="VALUE-0">
+                                      <block type="Boolean" id="4THjPttsMWr7X+4H*.wZ">
+                                        <field name="BOOL">TRUE</field>
+                                      </block>
+                                    </value>
+                                    <statement name="DO">
+                                      <block type="EndRound" id="/?nTFz^{x%tnl]ldYxz*">
+                                        <value name="VALUE-0">
+                                          <block type="EventPlayer" id="aaXRL5x]i?_s5CYROsie"></block>
+                                        </value>
+                                        <next>
+                                          <block type="Continue" id=";`0!)L7O;xkY(@a,0{fS"></block>
+                                        </next>
+                                      </block>
+                                    </statement>
+                                  </block>
+                                </next>
                               </block>
                             </next>
                           </block>

@@ -34,10 +34,28 @@ type Voids =
 	| { SetTargetScore: Numbers }
 
 	//TODO
-	| { If: Booleans, Then: Voids[] }
-	| [{ If: Booleans, Do: Voids[] }, ...{ If: Booleans, Do: Voids[] }[], { Else: Voids[] }]
+	| { If: Booleans, Do: Voids[] }
+	| { If: Booleans, Do: Voids[], Else: Voids[] }
+	// | [{ If: Booleans, Do: Voids[] }, ...{ If: Booleans, Do: Voids[] }[], { Else: Voids[] }] // This case breaks how the intermediate json is formatted --- just leave unsupported?
 	| { LoopVariable: [Variable, { from: Numbers, to: Numbers, by: Numbers }], Do: Voids[] }
 	| { While: Booleans, Do: Voids[] }
+	| "Break"
+	| "Continue"
+
+	// ALTERNATIVES
+	| { If: [Booleans, { Do: Voids[] }] }
+
+const statementBlocks = [
+	"Rules",
+	"Actions",
+	"Conditions",
+	"Do",
+	"Else",
+] as const;
+
+function isStatement(candidate: string) {
+	return statementBlocks.findIndex(statement => statement == candidate) >= 0;
+}
 
 type Variable =
 	| { type: "Global", variable: string }
@@ -159,18 +177,28 @@ function parseValue(value: PortalValues): any {
 		};
 	}
 	if (typeof value == "object") {
-		const [type, parameters] = Object.entries(value)[0];
+		const entries = Object.entries(value);
+		let { type, parameters, statements } = (() => {
+			if (entries.length == 1) {
+				const [type, parameters] = entries[0];
+				return { type, parameters, statements: [] };
+			} else {
+				const [type, parameters] = entries.find(([type]) => !isStatement(type));
+				const statements = entries.filter(([type]) => isStatement(type));
+				return { type, parameters, statements };
+			}
+		})();
+		if (!Array.isArray(parameters)) parameters = [parameters];
 		return {
 			type,
-			value: !Array.isArray(parameters)
-				? {
-					name: "VALUE-0",
-					block: parseValue(parameters),
-				}
-				: parameters.map((parameter: any, index: number) => ({
-					name: `VALUE-${index}`,
-					block: parseValue(parameter),
-				})),
+			value: parameters.map((parameter: any, index: number) => ({
+				name: `VALUE-${index}`,
+				block: parseValue(parameter),
+			})),
+			statement: statements.map(([type, contents]: any) => ({
+				name: type.toUpperCase(),
+				block: parseValue(contents),
+			}))
 		};
 	}
 	return { "error": true };
@@ -286,6 +314,24 @@ const exampleMod: PortalMod = {
 				{ EndRound: "EventPlayer" }
 			],
 		},
+		{
+			name: "Branch Tester",
+			eventType: "OnPlayerEarnedKill",
+			conditions: [],
+			actions: [
+				{ If: true, Do: [{ EndRound: "EventPlayer" }] },
+				{ If: true, Do: [{ EndRound: "EventPlayer" }], Else: [{ EndRound: "EventPlayer" }] },
+				// [{ If: true, Do: [{ EndRound: "EventPlayer" }] }, { If: true, Do: [{ EndRound: "EventPlayer" }] }, { Else: [{ EndRound: "EventPlayer" }] }],
+				{
+					LoopVariable: [{ type: "Global", variable: "TestVar" }, { from: 0, to: 10, by: 1 }], Do: [
+						{ EndRound: "EventPlayer" },
+						"Break",
+						"Continue",
+					]
+				},
+				{ While: true, Do: [{ EndRound: "EventPlayer" }] },
+			]
+		}
 	],
 };
 
