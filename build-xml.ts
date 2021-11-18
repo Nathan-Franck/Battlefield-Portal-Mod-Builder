@@ -32,6 +32,8 @@ type Voids =
 	| { EnableDefaultScoring: Booleans }
 	| { SetRoundTimeLimit: Numbers }
 	| { SetTargetScore: Numbers }
+
+	//TODO
 	| { If: Booleans, Then: Voids[] }
 	| [{ If: Booleans, Do: Voids[] }, ...{ If: Booleans, Do: Voids[] }[], { Else: Voids[] }]
 	| { LoopVariable: [Variable, { from: Numbers, to: Numbers, by: Numbers }], Do: Voids[] }
@@ -247,6 +249,10 @@ function blocklyToXML(key: string, json: any): string {
 	return `<${key}${properties}>${children}</${key}>`;
 }
 
+function IncrementPlayerScore(skip = 1): Voids {
+	return { SetGamemodeScore: ["EventPlayer", { Add: [{ GetGamemodeScore: "EventPlayer" }, skip] }] };
+}
+
 const exampleMod: PortalMod = {
 	rules: [
 		{
@@ -267,7 +273,7 @@ const exampleMod: PortalMod = {
 				{ NotEqualTo: ["EventPlayer", "EventOtherPlayer"] },
 			],
 			actions: [
-				{ SetGamemodeScore: ["EventPlayer", { Add: [{ GetGamemodeScore: "EventPlayer" }, 1] }] },
+				...[0, 1, 2].map(IncrementPlayerScore)
 			],
 		},
 		{
