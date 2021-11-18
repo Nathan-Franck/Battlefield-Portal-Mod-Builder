@@ -32,14 +32,12 @@ type Voids =
 	| { EnableDefaultScoring: Booleans }
 	| { SetRoundTimeLimit: Numbers }
 	| { SetTargetScore: Numbers }
-	| { If: Booleans, Do: Voids[] }
-	| { If: Booleans, Do: Voids[], Else: Voids[] }
-	| { While: Booleans, Do: Voids[] }
+	| { If: Booleans, Do: Array<Voids> }
+	| { If: Booleans, Do: Array<Voids>, Else: Array<Voids> }
+	| { While: Booleans, Do: Array<Voids> }
+	| { ForVariable: [variable: Variable, from: Numbers, to: Numbers, by: Numbers], Do: Voids[] }
 	| "Break"
 	| "Continue"
-
-	//TODO
-	| { ForVariable: [variable: Variable, from: Numbers, to: Numbers, by: Numbers], Do: Voids[] }
 
 const statementBlocks = [
 	"Rules",
@@ -143,31 +141,87 @@ type PortalMod = {
 	>,
 };
 
+function parseVariable(value: Variable): any {
+	return {
+		type: "variableReferenceBlock",
+		id: generateUID(),
+		...(value.type == "Global" ? {} : { mutation: { isObjectVar: false } }),
+		field: [{
+			name: "OBJECTTYPE",
+			inner: value.type,
+		}, {
+			name: "VAR",
+			id: generateUID(),
+			variableType: value.type,
+			inner: value.variable,
+		}],
+	};
+}
+
+function parseFunction(value: PortalValues): any {
+	const entries = Object.entries(value);
+	let { type, parameters, statements, mutation } = (() => {
+		if (entries.length == 1) {
+			const [type, parameters] = entries[0];
+			return { type, parameters, statements: [], mutation: [] };
+		} else {
+			const [type, parameters] = entries.find(([type]) => !isStatement(type));
+			const statements = entries.filter(([type]) => isStatement(type));
+			const mutation = statements
+				.map(([type]) => type)
+				.filter(isMutationFactor)
+				.reduce((counts, type) => ({
+					...counts,
+					[type.toLowerCase()]: type in counts ? counts[type] + 1 : 1
+				}), {} as any)
+			return { type, parameters, statements, mutation };
+		}
+	})();
+	if (!Array.isArray(parameters)) parameters = [parameters];
+	return {
+		type,
+		id: generateUID(),
+		...(Object.entries(mutation).length == 0 ? {} : { mutation }),
+		value: parameters.map((parameter: any, index: number) => ({
+			name: `VALUE-${index}`,
+			block: parseValue(parameter),
+		})),
+		statement: statements.map(([type, contents]: any) => ({
+			name: type.toUpperCase(),
+			...toLinkedList("block", contents.map(parseValue)),
+		}))
+	};
+}
+
+function tryParseAccessor(value: string) {
+	const filteredAccessors = Object
+		.entries(playerStateAccessors)
+		.filter(([_, names]) => names.findIndex(name => name == value) >= 0)
+	if (filteredAccessors.length > 0) {
+		const [type] = filteredAccessors[0];
+		return {
+			type: `${type}Item`,
+			id: generateUID(),
+			field: [
+				{ name: "VALUE-0", inner: type },
+				{ name: "VALUE-1", inner: value },
+			],
+		};
+	}
+	return false;
+}
+
 function parseValue(value: PortalValues): any {
 	if (typeof value == "string") {
-		const filteredAccessors = Object
-			.entries(playerStateAccessors)
-			.filter(([_, names]) => names.findIndex(name => name == value) >= 0)
-		if (filteredAccessors.length > 0) {
-			const [type] = filteredAccessors[0];
-			return {
-				type: `${type}Item`,
-				id: generateID(),
-				field: [
-					{ name: "VALUE-0", inner: type },
-					{ name: "VALUE-1", inner: value },
-				],
-			};
-		}
-		return {
+		return tryParseAccessor(value) || {
 			type: value,
-			id: generateID(),
+			id: generateUID(),
 		};
 	}
 	if (typeof value == "number") {
 		return {
 			type: "Number",
-			id: generateID(),
+			id: generateUID(),
 			field: {
 				name: "NUM",
 				inner: value,
@@ -177,7 +231,7 @@ function parseValue(value: PortalValues): any {
 	if (typeof value == "boolean") {
 		return {
 			type: "Boolean",
-			id: generateID(),
+			id: generateUID(),
 			field: {
 				name: "BOOL",
 				inner: `${value}`.toUpperCase(),
@@ -185,38 +239,12 @@ function parseValue(value: PortalValues): any {
 		};
 	}
 	if (typeof value == "object") {
-		const entries = Object.entries(value);
-		let { type, parameters, statements, mutation } = (() => {
-			if (entries.length == 1) {
-				const [type, parameters] = entries[0];
-				return { type, parameters, statements: [], mutation: [] };
-			} else {
-				const [type, parameters] = entries.find(([type]) => !isStatement(type));
-				const statements = entries.filter(([type]) => isStatement(type));
-				const mutation = statements
-					.map(([type]) => type)
-					.filter(isMutationFactor)
-					.reduce((counts, type) => ({
-						...counts,
-						[type.toLowerCase()]: type in counts ? counts[type] + 1 : 1
-					}), {} as any)
-				return { type, parameters, statements, mutation };
-			}
-		})();
-		if (!Array.isArray(parameters)) parameters = [parameters];
-		return {
-			type,
-			id: generateID(),
-			...(Object.entries(mutation).length == 0 ? {} : { mutation }),
-			value: parameters.map((parameter: any, index: number) => ({
-				name: `VALUE-${index}`,
-				block: parseValue(parameter),
-			})),
-			statement: statements.map(([type, contents]: any) => ({
-				name: type.toUpperCase(),
-				...toLinkedList("block", contents.map(parseValue)),
-			}))
-		};
+		if ("variable" in value) {
+			return parseVariable(value);
+		}
+		else {
+			return parseFunction(value);
+		}
 	}
 	return { "error": true };
 }
@@ -229,8 +257,8 @@ function toLinkedList(key: string, array: any[]) {
 	};
 }
 
-function generateID() {
-	return (Math.random() + 1).toString(36).substring(2); // Credit - https://stackoverflow.com/questions/1349404/generate-random-string-characters-in-javascript
+function generateUID() {
+	return (Math.random() + 1).toString(36).substring(2);
 }
 
 function modToBlockly(mod: PortalMod): any {
@@ -239,7 +267,7 @@ function modToBlockly(mod: PortalMod): any {
 		block: {
 			xmlns: "https://developers.google.com/blockly/xml",
 			type: "modBlock",
-			id: generateID(),
+			id: generateUID(),
 			deletable: false,
 			statement: {
 				name: "RULES",
@@ -347,15 +375,21 @@ const exampleMod: PortalMod = {
 			actions: [
 				{ If: true, Do: [{ EndRound: "EventPlayer" }] },
 				{ If: true, Do: [{ EndRound: "EventPlayer" }], Else: [{ EndRound: "EventPlayer" }] },
-				// {
-				// 	ForVariable: [{ type: "Global", variable: "TestVar" }, 0, 10, 1], Do: [
-				// 		{ EndRound: "EventPlayer" },
-				// 		"Break",
-				// 		"Continue",
-				// 	]
-				// },
-				{ While: true, Do: [{ EndRound: "EventPlayer" }, "Break", "Continue"] },
-			]
+				{
+					ForVariable: [{ type: "Global", variable: "TestVar" }, 0, 10, 1], Do: [
+						{ EndRound: "EventPlayer" },
+						"Break",
+						"Continue",
+					]
+				},
+				{
+					While: true, Do: [
+						{ EndRound: "EventPlayer" },
+						"Break",
+						"Continue",
+					]
+				},
+			],
 		}
 	],
 };
