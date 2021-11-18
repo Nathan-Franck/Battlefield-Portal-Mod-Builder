@@ -26,38 +26,21 @@ type Booleans =
 	| { GetSoldierState: [Players, SoldierStateBool] }
 	| boolean
 
+type Procedure = Voids | Array<Voids>
+
 type Voids =
 	| { SetGamemodeScore: [Players, Numbers] }
 	| { EndRound: Players }
 	| { EnableDefaultScoring: Booleans }
 	| { SetRoundTimeLimit: Numbers }
 	| { SetTargetScore: Numbers }
-	| { If: Booleans, Do: Array<Voids> }
-	| { If: Booleans, Do: Array<Voids>, Else: Array<Voids> }
-	| { While: Booleans, Do: Array<Voids> }
+	| { While: Booleans, Do: Procedure }
 	| { ForVariable: [variable: Variable, from: Numbers, to: Numbers, by: Numbers], Do: Voids[] }
+	| { If: Booleans, Do: Procedure }
+	| { If: Booleans, Do: Procedure, Else: Procedure }
+	| [{ If: Booleans, Do: Procedure }, ...{ ElseIf: Booleans, Do: Procedure }[], { Else: Procedure }]
 	| "Break"
 	| "Continue"
-
-const statementBlocks = [
-	"Rules",
-	"Actions",
-	"Conditions",
-	"Do",
-	"Else",
-] as const;
-
-const mutationFactors = [
-	"Else"
-] as const;
-
-function isStatement(candidate: string) {
-	return statementBlocks.findIndex(statement => statement == candidate) >= 0;
-}
-
-function isMutationFactor(candidate: string) {
-	return mutationFactors.findIndex(mutation => mutation == candidate) >= 0;
-}
 
 type Variable =
 	| { type: "Global", variable: string }
@@ -159,38 +142,101 @@ function parseVariable(value: Variable): any {
 }
 
 function parseFunction(value: PortalValues): any {
-	const entries = Object.entries(value);
-	let { type, parameters, statements, mutation } = (() => {
-		if (entries.length == 1) {
-			const [type, parameters] = entries[0];
-			return { type, parameters, statements: [], mutation: [] };
-		} else {
-			const [type, parameters] = entries.find(([type]) => !isStatement(type));
-			const statements = entries.filter(([type]) => isStatement(type));
-			const mutation = statements
-				.map(([type]) => type)
-				.filter(isMutationFactor)
-				.reduce((counts, type) => ({
-					...counts,
-					[type.toLowerCase()]: type in counts ? counts[type] + 1 : 1
-				}), {} as any)
-			return { type, parameters, statements, mutation };
-		}
-	})();
-	if (!Array.isArray(parameters)) parameters = [parameters];
-	return {
+	let [type, parameters] = Object.entries(value)[0]
+	return Array.isArray(parameters) ? [
+		{ type },
+		{ id: generateUID },
+		...parameters.map((parameter: any, index: number) => ({
+			value: {
+				name: `VALUE-${index}`,
+				block: parseValue(parameter),
+			}
+		}))
+	] : {
 		type,
 		id: generateUID(),
-		...(Object.entries(mutation).length == 0 ? {} : { mutation }),
-		value: parameters.map((parameter: any, index: number) => ({
-			name: `VALUE-${index}`,
-			block: parseValue(parameter),
-		})),
-		statement: statements.map(([type, contents]: any) => ({
-			name: type.toUpperCase(),
-			...toLinkedList("block", contents.map(parseValue)),
-		}))
+		value: {
+			name: "VALUE-0",
+			block: parseValue(parameters),
+		},
 	};
+}
+
+function parseProcedure(value: any): any {
+	return toLinkedList("block", Array.isArray(value) ? value.map(parseValue) : [parseValue(value)])
+}
+
+function parseIfStatement(value: any): any {
+	if ("If" in value) {
+		if (!("Else" in value)) {
+			return {
+				type: "If",
+				id: generateUID(),
+				value: {
+					name: "VALUE-0",
+					block: parseValue(value.If),
+				},
+				statement: {
+					name: "DO",
+					...parseProcedure(value.Do),
+				},
+			}
+		}
+		return [
+			{ type: "If" },
+			{ id: generateUID() },
+			{ mutation: { else: 1 } },
+			{ value: { name: "VALUE-0", block: parseValue(value.If) } },
+			{
+				statement: {
+					name: "DO",
+					...parseProcedure(value.Do),
+				}
+			},
+			{
+				statement: {
+					name: "ELSE",
+					...parseProcedure(value.Else),
+				}
+			},
+		];
+	}
+	const elseIfs = value.filter((element: any) => "ElseIf" in element);
+	return [
+		{ type: "If" },
+		{ id: generateUID() },
+		{
+			mutation: {
+				elseif: elseIfs.length,
+				else: 1
+			}
+		},
+		{ value: { name: "VALUE-0", block: parseValue(value[0].If) } },
+		{
+			statement: {
+				name: "DO",
+				...parseProcedure(value[0].Do),
+			}
+		},
+		...elseIfs.flatMap((elseIf: any, index: number) => [{
+			statement: {
+				name: `IF${index + 1}`,
+				block: parseValue(elseIf.ElseIf),
+			}
+		},
+		{
+			statement: {
+				name: `DO${index + 1}`,
+				...parseProcedure(elseIf.Do),
+			}
+		}]),
+		{
+			statement: {
+				name: "ELSE",
+				...parseProcedure(value[value.length - 1].Else),
+			}
+		},
+	];
 }
 
 function tryParseAccessor(value: string) {
@@ -241,6 +287,9 @@ function parseValue(value: PortalValues): any {
 	if (typeof value == "object") {
 		if ("variable" in value) {
 			return parseVariable(value);
+		}
+		if ("If" in value || Array.isArray(value) && "If" in value[0]) {
+			return parseIfStatement(value);
 		}
 		else {
 			return parseFunction(value);
@@ -303,28 +352,24 @@ function modToBlockly(mod: PortalMod): any {
 	};
 }
 
+function blocklyEntries(json: any): Array<[string, any]> {
+	if (Array.isArray(json)) {
+		return json.map(element => Object.entries(element)[0])
+	}
+	return Object.entries(json);
+}
+
 function blocklyToXML(json: any): string {
-	const children = "inner" in json
+	return "inner" in json
 		? json.inner
-		: Object
-			.entries(json)
-			.filter(([_, value]) => typeof value == "object")
+		: blocklyEntries(json)
+			.filter(([key, value]) => typeof value == "object")
 			.map(([key, value]) => blocklyToXMLInner(key, value))
 			.join("");
-	return children;
 }
 
 function blocklyToXMLInner(key: string, json: any): string {
-	if (Array.isArray(json)) {
-		return json.reduce((result, next) => {
-			const contents = blocklyToXMLInner(key, next);
-			return result != ""
-				? `${result}${contents}`
-				: contents;
-		}, "")
-	}
-	const properties = Object
-		.entries(json)
+	const properties = blocklyEntries(json)
 		.filter(([key, value]) => key != "inner" && typeof value != "object")
 		.map(([key, value]) => ` ${key}="${value.toString()}"`).join("");
 	const children = blocklyToXML(json);
@@ -373,8 +418,13 @@ const exampleMod: PortalMod = {
 			eventType: "OnPlayerEarnedKill",
 			conditions: [],
 			actions: [
-				{ If: true, Do: [{ EndRound: "EventPlayer" }] },
-				{ If: true, Do: [{ EndRound: "EventPlayer" }], Else: [{ EndRound: "EventPlayer" }] },
+				{ If: true, Do: { EndRound: "EventPlayer" } },
+				{ If: true, Do: { EndRound: "EventPlayer" }, Else: { EndRound: "EventPlayer" } },
+				[
+					{ If: true, Do: { EndRound: "EventPlayer" } },
+					{ ElseIf: true, Do: { EndRound: "EventPlayer" } },
+					{ Else: { EndRound: "EventPlayer" } },
+				],
 				{
 					ForVariable: [{ type: "Global", variable: "TestVar" }, 0, 10, 1], Do: [
 						{ EndRound: "EventPlayer" },
