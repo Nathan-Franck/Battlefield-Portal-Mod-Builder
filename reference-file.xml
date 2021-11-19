@@ -1,27 +1,27 @@
-<block xmlns="https://developers.google.com/blockly/xml" type="modBlock" id="HQW8/7dTm96DF0fOw`JH" deletable="false">
+<block xmlns="https://developers.google.com/blockly/xml" type="modBlock" id="9sips50q9" deletable="false">
     <statement name="RULES">
-      <block type="ruleBlock" id="nRM3j3TS8Xap_ZE/VMZ{">
+      <block type="ruleBlock" id="=a[n48$t[++LP%593}n?">
         <mutation isOnGoingEvent="false"></mutation>
         <field name="NAME">Hello World!</field>
         <field name="EVENTTYPE">OnGameModeStarted</field>
         <statement name="ACTIONS">
-          <block type="EnableDefaultScoring" id="T(-7pE%}kG7`5}cCw2XZ">
+          <block type="EnableDefaultScoring" id="vkueq890nok">
             <value name="VALUE-0">
-              <block type="Boolean" id="GXx.$GfWO_,LT*c-=%3*">
+              <block type="Boolean" id="dmkm1dpzp7j">
                 <field name="BOOL">FALSE</field>
               </block>
             </value>
             <next>
-              <block type="SetRoundTimeLimit" id="O*yjAx`nHKhP/mpj|^Kd">
+              <block type="SetRoundTimeLimit" id="mbzruedv1n">
                 <value name="VALUE-0">
-                  <block type="Number" id="Os7Y66|p$TcTYU-Hi1=b">
+                  <block type="Number" id="nx4vetn0qz">
                     <field name="NUM">900</field>
                   </block>
                 </value>
                 <next>
-                  <block type="SetTargetScore" id="__PHx?3[c:)Jix0G!I6u">
+                  <block type="SetTargetScore" id="um52te340q">
                     <value name="VALUE-0">
-                      <block type="Number" id="u:~;[MhWvg{bz@Wd.u,P">
+                      <block type="Number" id="qyx8zi7sq7">
                         <field name="NUM">50</field>
                       </block>
                     </value>
@@ -32,150 +32,271 @@
           </block>
         </statement>
         <next>
-          <block type="ruleBlock" id="}.y##rD96@]!j%EkK/r8">
+          <block type="ruleBlock" id="+sFEMr.DP/.M0O_1ysFQ">
             <mutation isOnGoingEvent="false"></mutation>
             <field name="NAME">Increment Score</field>
             <field name="EVENTTYPE">OnPlayerEarnedKill</field>
             <statement name="CONDITIONS">
-              <block type="conditionBlock" id="QPys/e#S2:))onqsMl.A">
+              <block type="conditionBlock" id="M(EMt.[ggLxV}#,e_GXC">
                 <value name="CONDITION">
-                  <block type="NotEqualTo" id="I~s(TN7W(~!l85JTPf`/">
+                  <block type="NotEqualTo" id="qso92689k6">
                     <value name="VALUE-0">
-                      <block type="EventPlayer" id="6_ao7WOkW9msMCd08St:"></block>
+                      <block type="EventPlayer" id="f7jifydd1rk"></block>
                     </value>
                     <value name="VALUE-1">
-                      <block type="EventOtherPlayer" id="*,1^99#(~q0Dk,cfwOoN"></block>
+                      <block type="EventOtherPlayer" id="3fq0enqq8t"></block>
                     </value>
                   </block>
                 </value>
               </block>
             </statement>
-            <next>
-              <block type="ruleBlock" id="!O!,6h6[nI?36R7rU|aC">
-                <mutation isOnGoingEvent="false"></mutation>
-                <field name="NAME">Check Win Condition</field>
-                <field name="EVENTTYPE">OnPlayerEarnedKill</field>
-                <statement name="CONDITIONS">
-                  <block type="conditionBlock" id="^[N2/=sVgg:o1hbz0Tc|">
-                    <value name="CONDITION">
-                      <block type="Equals" id="L:gp?(+YSJzbM!PU=+7#">
+            <statement name="ACTIONS">
+              <block type="SetGamemodeScore" id="p8xs6dn6lhh">
+                <value name="VALUE-0">
+                  <block type="EventPlayer" id="7s0b0odbbn"></block>
+                </value>
+                <value name="VALUE-1">
+                  <block type="Add" id="u6hwfeyj1q">
+                    <value name="VALUE-0">
+                      <block type="GetGamemodeScore" id="1w3wjh1jty">
                         <value name="VALUE-0">
-                          <block type="GetGamemodeScore" id="Q8I6%~/o!K$H/_RGm0dN">
+                          <block type="EventPlayer" id="8j8bgvzflzg"></block>
+                        </value>
+                      </block>
+                    </value>
+                    <value name="VALUE-1">
+                      <block type="Number" id="ilhwkcu2eq">
+                        <field name="NUM">0</field>
+                      </block>
+                    </value>
+                  </block>
+                </value>
+                <next>
+                  <block type="SetGamemodeScore" id="z06gafxu2b">
+                    <value name="VALUE-0">
+                      <block type="EventPlayer" id="84yv3e4f3b"></block>
+                    </value>
+                    <value name="VALUE-1">
+                      <block type="Add" id="ansr48znkh">
+                        <value name="VALUE-0">
+                          <block type="GetGamemodeScore" id="jwy0ktk0dw">
                             <value name="VALUE-0">
-                              <block type="EventPlayer" id="HE8%UZ8`Fj%@l_}+7/|O"></block>
+                              <block type="EventPlayer" id="8qe5r249ez"></block>
                             </value>
                           </block>
                         </value>
                         <value name="VALUE-1">
-                          <block type="GetTargetScore" id="^KD)Ww!dV;Q,k?hTbA+g"></block>
+                          <block type="Number" id="z2f2kkvn4nj">
+                            <field name="NUM">1</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="SetGamemodeScore" id="s2rduwek74">
+                        <value name="VALUE-0">
+                          <block type="EventPlayer" id="5x4exz4ayg"></block>
+                        </value>
+                        <value name="VALUE-1">
+                          <block type="Add" id="xv2xzme60s">
+                            <value name="VALUE-0">
+                              <block type="GetGamemodeScore" id="xti0ad7r3kf">
+                                <value name="VALUE-0">
+                                  <block type="EventPlayer" id="htf8vvid3v"></block>
+                                </value>
+                              </block>
+                            </value>
+                            <value name="VALUE-1">
+                              <block type="Number" id="kc5p1g0kpl">
+                                <field name="NUM">2</field>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <next>
+              <block type="ruleBlock" id="zkiamy_h;L-[SoqxI*uw">
+                <mutation isOnGoingEvent="false"></mutation>
+                <field name="NAME">Check Win Condition</field>
+                <field name="EVENTTYPE">OnPlayerEarnedKill</field>
+                <statement name="CONDITIONS">
+                  <block type="conditionBlock" id="+XA2qLRHOQ_IL9y!^`Fu">
+                    <value name="CONDITION">
+                      <block type="Equals" id="icyr8iyojjl">
+                        <value name="VALUE-0">
+                          <block type="GetGamemodeScore" id="2q8w0euvt4">
+                            <value name="VALUE-0">
+                              <block type="EventPlayer" id="574fgq0xug"></block>
+                            </value>
+                          </block>
+                        </value>
+                        <value name="VALUE-1">
+                          <block type="GetTargetScore" id="ag4jw5dhul"></block>
                         </value>
                       </block>
                     </value>
                   </block>
                 </statement>
                 <statement name="ACTIONS">
-                  <block type="EndRound" id="Ug}r@It_`%agkO}1cEP*">
+                  <block type="EndRound" id="zrgqmy16kj">
                     <value name="VALUE-0">
-                      <block type="EventPlayer" id="JI~J#$JTbL,nJ[~is~!d"></block>
+                      <block type="EventPlayer" id="windmwu0xk"></block>
                     </value>
                   </block>
                 </statement>
                 <next>
-                  <block type="ruleBlock" id="L-;l]/sfh,+ezA%c[|nY">
+                  <block type="ruleBlock" id="4{UPv2H^t%RCN|f=J]`k">
                     <mutation isOnGoingEvent="false"></mutation>
                     <field name="NAME">Branch Tester</field>
                     <field name="EVENTTYPE">OnPlayerEarnedKill</field>
                     <statement name="ACTIONS">
-                      <block type="If" id="Pb{4d~5YtsgLf:AS*S:f">
+                      <block type="If" id="c9vdr9q0dp">
                         <value name="VALUE-0">
-                          <block type="Boolean" id="@3$uFdme}.-wX0k/0r50">
+                          <block type="Boolean" id="46etea05sk">
                             <field name="BOOL">TRUE</field>
                           </block>
                         </value>
                         <statement name="DO">
-                          <block type="EndRound" id="^g1yIXP#jU5-GnH9{@Lz">
+                          <block type="EndRound" id="aqhtr801mh">
                             <value name="VALUE-0">
-                              <block type="EventPlayer" id="1pnALZWi#HQMSEFpPJMB"></block>
+                              <block type="EventPlayer" id="2ww6s40w6p"></block>
                             </value>
                           </block>
                         </statement>
                         <next>
-                          <block type="If" id="uP2.LqfnV4~uB@7Wg6c7">
+                          <block type="If" id="u8kfi37djbh">
                             <mutation else="1"></mutation>
                             <value name="VALUE-0">
-                              <block type="Boolean" id="Y*lX$4w5+j$9[9r])K-?">
+                              <block type="Boolean" id="cerlz22bgb">
                                 <field name="BOOL">TRUE</field>
                               </block>
                             </value>
                             <statement name="DO">
-                              <block type="EndRound" id="^JE?vof!n-x.IL3q3s/.">
+                              <block type="EndRound" id="no1iongs6bi">
                                 <value name="VALUE-0">
-                                  <block type="EventPlayer" id="1omjVP?Tzm;D/E_+vyWa"></block>
+                                  <block type="EventPlayer" id="giw2o8nfapl"></block>
                                 </value>
                               </block>
                             </statement>
                             <statement name="ELSE">
-                              <block type="EndRound" id="[JoFEU~c~)-ZUxY`ht.@">
+                              <block type="EndRound" id="0vcgshygjmk">
                                 <value name="VALUE-0">
-                                  <block type="EventPlayer" id="YmcWLsUtRcDb2Ji[e^Ps"></block>
+                                  <block type="EventPlayer" id="nni8n5a7vp"></block>
                                 </value>
                               </block>
                             </statement>
                             <next>
-                              <block type="ForVariable" id="D6*{]Ka=vuuLs.7l$nwD">
+                              <block type="If" id="acukzhhfzni">
+                                <mutation elseif="2" else="1"></mutation>
                                 <value name="VALUE-0">
-                                  <block type="variableReferenceBlock" id="Ak~VOlz7MOb#cb=J`Jf]">
-                                    <mutation isObjectVar="false"></mutation>
-                                    <field name="OBJECTTYPE">Global</field>
-                                    <field name="VAR" id="6Y@J2+(pf4pn8(g6jb`6" variabletype="Global">TestVar</field>
-                                  </block>
-                                </value>
-                                <value name="VALUE-1">
-                                  <block type="Number" id="_9@@|R{)EU6|O[Sl*(]3">
-                                    <field name="NUM">0</field>
-                                  </block>
-                                </value>
-                                <value name="VALUE-2">
-                                  <block type="Number" id="3N|]7^q./SDgZ/Do:4,U">
-                                    <field name="NUM">10</field>
-                                  </block>
-                                </value>
-                                <value name="VALUE-3">
-                                  <block type="Number" id="`9z1kA=U00S#Tl!!l%vh">
-                                    <field name="NUM">1</field>
+                                  <block type="Boolean" id="uh8virbwyv">
+                                    <field name="BOOL">TRUE</field>
                                   </block>
                                 </value>
                                 <statement name="DO">
-                                  <block type="EndRound" id="$c/BedTV*37i${M=BlKk">
+                                  <block type="EndRound" id="ldovopmww9">
                                     <value name="VALUE-0">
-                                      <block type="EventPlayer" id=".#)#J-]$?zeB?%v@gP:H"></block>
+                                      <block type="EventPlayer" id="jxgehh54jf"></block>
                                     </value>
-                                    <next>
-                                      <block type="Break" id="WNOKb5[[70r`%iUMT@+g">
-                                        <next>
-                                          <block type="Continue" id="Q@F8ku:MhGqslj`n6NPM"></block>
-                                        </next>
-                                      </block>
-                                    </next>
+                                  </block>
+                                </statement>
+                                <value name="IF1">
+                                  <block type="Boolean" id="25krf0jmzo">
+                                    <field name="BOOL">TRUE</field>
+                                  </block>
+                                </value>
+                                <statement name="DO1">
+                                  <block type="EndRound" id="w9y5c0vra8">
+                                    <value name="VALUE-0">
+                                      <block type="EventPlayer" id="eqj0l8f6pq"></block>
+                                    </value>
+                                  </block>
+                                </statement>
+                                <value name="IF2">
+                                  <block type="Boolean" id="o1iad9rtf9k">
+                                    <field name="BOOL">TRUE</field>
+                                  </block>
+                                </value>
+                                <statement name="DO2">
+                                  <block type="EndRound" id="4amas84obok">
+                                    <value name="VALUE-0">
+                                      <block type="EventPlayer" id="nmc3kq30gh"></block>
+                                    </value>
+                                  </block>
+                                </statement>
+                                <statement name="ELSE">
+                                  <block type="EndRound" id="f01eyfcm9b">
+                                    <value name="VALUE-0">
+                                      <block type="EventPlayer" id="hcq6bnj9a5"></block>
+                                    </value>
                                   </block>
                                 </statement>
                                 <next>
-                                  <block type="While" id="1,gItep*RW6(LVDV5MYI">
+                                  <block type="ForVariable" id="d4igjmk7g7">
                                     <value name="VALUE-0">
-                                      <block type="Boolean" id="4THjPttsMWr7X+4H*.wZ">
-                                        <field name="BOOL">TRUE</field>
+                                      <block type="variableReferenceBlock" id="w9vqiakz3e">
+                                        <mutation isObjectVar="false"></mutation>
+                                        <field name="OBJECTTYPE">Global</field>
+                                        <field name="VAR" id="8l1o3yshwr" variabletype="Global">TestVar</field>
+                                      </block>
+                                    </value>
+                                    <value name="VALUE-1">
+                                      <block type="Number" id="15wwakn642">
+                                        <field name="NUM">0</field>
+                                      </block>
+                                    </value>
+                                    <value name="VALUE-2">
+                                      <block type="Number" id="d1hkl2ypnm">
+                                        <field name="NUM">10</field>
+                                      </block>
+                                    </value>
+                                    <value name="VALUE-3">
+                                      <block type="Number" id="kz6itkabswk">
+                                        <field name="NUM">1</field>
                                       </block>
                                     </value>
                                     <statement name="DO">
-                                      <block type="EndRound" id="/?nTFz^{x%tnl]ldYxz*">
+                                      <block type="EndRound" id="52sddeai2h">
                                         <value name="VALUE-0">
-                                          <block type="EventPlayer" id="aaXRL5x]i?_s5CYROsie"></block>
+                                          <block type="EventPlayer" id="88jjz37a49"></block>
                                         </value>
                                         <next>
-                                          <block type="Continue" id=";`0!)L7O;xkY(@a,0{fS"></block>
+                                          <block type="Break" id="j2wkfvc7tj">
+                                            <next>
+                                              <block type="Continue" id="8u97cjkbkp"></block>
+                                            </next>
+                                          </block>
                                         </next>
                                       </block>
                                     </statement>
+                                    <next>
+                                      <block type="While" id="zjjazlrg1dj">
+                                        <value name="VALUE-0">
+                                          <block type="Boolean" id="p6grw8ru05">
+                                            <field name="BOOL">TRUE</field>
+                                          </block>
+                                        </value>
+                                        <statement name="DO">
+                                          <block type="EndRound" id="3uyozriaalj">
+                                            <value name="VALUE-0">
+                                              <block type="EventPlayer" id="t1kufl6d4h"></block>
+                                            </value>
+                                            <next>
+                                              <block type="Break" id="sqofn0il7k">
+                                                <next>
+                                                  <block type="Continue" id="e83kmpxh6d"></block>
+                                                </next>
+                                              </block>
+                                            </next>
+                                          </block>
+                                        </statement>
+                                      </block>
+                                    </next>
                                   </block>
                                 </next>
                               </block>

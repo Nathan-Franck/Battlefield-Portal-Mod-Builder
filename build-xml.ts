@@ -125,27 +125,27 @@ type PortalMod = {
 };
 
 function parseVariable(value: Variable): any {
-	return {
-		type: "variableReferenceBlock",
-		id: generateUID(),
-		...(value.type == "Global" ? {} : { mutation: { isObjectVar: false } }),
-		field: [{
-			name: "OBJECTTYPE",
-			inner: value.type,
-		}, {
-			name: "VAR",
-			id: generateUID(),
-			variableType: value.type,
-			inner: value.variable,
-		}],
-	};
+	return [
+		{ type: "variableReferenceBlock" },
+		{ id: generateUID() },
+		...(value.type == "Global" ? [] : [{ mutation: { isObjectVar: false } }]),
+		{ field: { name: "OBJECTTYPE", inner: value.type } },
+		{
+			field: {
+				name: "VAR",
+				id: generateUID(),
+				variableType: value.type,
+				inner: value.variable,
+			}
+		},
+	];
 }
 
 function parseFunction(value: PortalValues): any {
 	let [type, parameters] = Object.entries(value)[0]
 	return Array.isArray(parameters) ? [
 		{ type },
-		{ id: generateUID },
+		{ id: generateUID() },
 		...parameters.map((parameter: any, index: number) => ({
 			value: {
 				name: `VALUE-${index}`,
@@ -239,20 +239,36 @@ function parseIfStatement(value: any): any {
 	];
 }
 
+function parseLoopStatement(value: any): any {
+	const result = parseFunction(value);
+	const statement = {
+		name: "DO",
+		...parseProcedure(value.Do),
+	};
+	if (Array.isArray(result)) {
+		return [
+			...result,
+			{ statement },
+		]
+	}
+	return {
+		...result,
+		statement,
+	};
+}
+
 function tryParseAccessor(value: string) {
 	const filteredAccessors = Object
 		.entries(playerStateAccessors)
 		.filter(([_, names]) => names.findIndex(name => name == value) >= 0)
 	if (filteredAccessors.length > 0) {
 		const [type] = filteredAccessors[0];
-		return {
-			type: `${type}Item`,
-			id: generateUID(),
-			field: [
-				{ name: "VALUE-0", inner: type },
-				{ name: "VALUE-1", inner: value },
-			],
-		};
+		return [
+			{ type: `${type}Item` },
+			{ id: generateUID() },
+			{ field: { name: "VALUE-0", inner: type } },
+			{ field: { name: "VALUE-1", inner: value } },
+		];
 	}
 	return false;
 }
@@ -291,6 +307,9 @@ function parseValue(value: PortalValues): any {
 		if ("If" in value || Array.isArray(value) && "If" in value[0]) {
 			return parseIfStatement(value);
 		}
+		if ("Do" in value) {
+			return parseLoopStatement(value);
+		}
 		else {
 			return parseFunction(value);
 		}
@@ -299,10 +318,23 @@ function parseValue(value: PortalValues): any {
 }
 
 function toLinkedList(key: string, array: any[]) {
+	const result = array
+		.reverse()
+		.reduce((result, current) => {
+			if (result == null) {
+				return current
+			}
+			if (Array.isArray(current)) {
+				return [...current, { next: { [key]: result } }];
+			}
+			return { ...current, next: { [key]: result } };
+		}, null);
+
+	if (result == null) {
+		return {};
+	}
 	return {
-		[key]: array
-			.reverse()
-			.reduce((result, current) => result == null ? current : ({ ...current, next: { [key]: result } }), null) || []
+		[key]: result,
 	};
 }
 
@@ -320,17 +352,18 @@ function modToBlockly(mod: PortalMod): any {
 			deletable: false,
 			statement: {
 				name: "RULES",
-				...toLinkedList("block", rules.map(rule => ({
-					type: "ruleBlock",
-					mutation: {
-						isOnGoingEvent: rule.eventType == "Ongoing"
+				...toLinkedList("block", rules.map(rule => ([
+					{ type: "ruleBlock" },
+					{
+						mutation: {
+							isOnGoingEvent: rule.eventType == "Ongoing"
+						}
 					},
-					field: [
-						{ name: "NAME", inner: rule.name },
-						{ name: "EVENTTYPE", inner: rule.eventType },
-						...(rule.eventType != "Ongoing" ? [] : [{ name: "OBJECTTYPE", inner: rule.objectType }]),
-					],
-					statement: [
+					{ field: { name: "NAME", inner: rule.name } },
+					{ field: { name: "EVENTTYPE", inner: rule.eventType } },
+					...(rule.eventType != "Ongoing" ? [] : [{ field: { name: "OBJECTTYPE", inner: rule.objectType } }]),
+					{
+						statement:
 						{
 							name: "CONDITIONS",
 							...toLinkedList("block", rule.conditions.map(condition => ({
@@ -340,13 +373,16 @@ function modToBlockly(mod: PortalMod): any {
 									block: parseValue(condition),
 								},
 							}))),
-						},
+						}
+					},
+					{
+						statement:
 						{
 							name: "ACTIONS",
 							...toLinkedList("block", rule.actions.map(parseValue)),
 						}
-					]
-				}))),
+					},
+				]))),
 			},
 		},
 	};
@@ -422,6 +458,7 @@ const exampleMod: PortalMod = {
 				{ If: true, Do: { EndRound: "EventPlayer" }, Else: { EndRound: "EventPlayer" } },
 				[
 					{ If: true, Do: { EndRound: "EventPlayer" } },
+					{ ElseIf: true, Do: { EndRound: "EventPlayer" } },
 					{ ElseIf: true, Do: { EndRound: "EventPlayer" } },
 					{ Else: { EndRound: "EventPlayer" } },
 				],
