@@ -15,6 +15,5 @@
         "noImplicitThis": true,
         // "strictPropertyInitialization": true,
         "preserveConstEnums": true
-    },
-    "exclude": []
+    }
 }

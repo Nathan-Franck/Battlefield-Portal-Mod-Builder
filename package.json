@@ -1,13 +1,7 @@
 {
-  "name": "battlefield-portal-script-generator",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
   "scripts": {
-    "build-xml": "ts-node build-xml.ts"
+    "build-exampleMod": "ts-node exampleMod.ts"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "@types/node": "^16.11.7",
     "xml-formatter": "^2.5.1"

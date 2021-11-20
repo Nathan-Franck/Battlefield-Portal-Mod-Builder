@@ -1,57 +1,47 @@
 import * as fs from "fs";
 import xmlFormat from "xml-formatter";
-import { definitions } from "definitions";
+import { portalDefinitions } from "./portalDefinitions";
 
+export namespace Portal {
 
-namespace Portal {
-
-	export type Definitions = typeof definitions;
+	type Definitions = typeof portalDefinitions;
 	export type Events = Definitions["events"][number]["name"];
 	export type Objects = Definitions["objects"][number]["name"];
-	export type SelectionLists = {
+	type SelectionLists = {
 		[key in `${number}` & keyof Definitions["selectionLists"]as Definitions["selectionLists"][key]["name"]]: {
 			returnType: Definitions["selectionLists"][key]["returnType"],
 			selectionValues: Definitions["selectionLists"][key]["selectionValues"][number]["name"],
 		}
 	}
-	export type Types = Definitions["types"][number] | "Void";
-	export type ExtractReturnType<T> = T extends { returnType: any } ? T["returnType"] : "Void"
-	export type ExtractParameters<T, Result = {
-		[key in keyof T]: T[key] extends { parameterTypes: any } ? T[key]["parameterTypes"] extends readonly [] ? "Any" : T[key]["parameterTypes"][number] : "error: lat"
-	}> = Result
-	export type Values = {
-		[returnType in Types]: { [
-			index
-			in `${number}` & keyof Definitions["values"]
-			as
-			Definitions["values"][index] extends { functionSignatures: ReadonlyArray<{ readonly returnType: returnType }> }
-			? Definitions["values"][index]["name"]
-			: Definitions["values"][index] extends { functionSignatures: ReadonlyArray<{ readonly returnType: any }> }
-			?  never
-			: returnType extends "Void"
-			? Definitions["values"][index]["name"]
-			: never
-			]:
-			ExtractParameters<({ returnType: returnType } & Definitions["values"][index]["functionSignatures"][number])["parameterTypes"]>
+	export type Types = Definitions["types"][number];
+	export namespace Values {
+		type ExtractParameters<T> = {
+			[key in keyof T]: T[key] extends { parameterTypes: any } ? T[key]["parameterTypes"] extends readonly [] ? "Any" : T[key]["parameterTypes"][number] : never
 		}
-	}
-
-	export type Tester = Types.MapToType<"Any">
-
-	export type MapSetToType<T, Result = {
-		-readonly [index in keyof T]: Types.MapToType<T[index]>
-	}> = Result;
-	export type GenerateBlockFormat<T> = {
-		[key in keyof T]: T[key] extends readonly [...any[]] ?
-		T[key] extends readonly [] ? key
-		// : T[key] extends readonly [any] ? MapToType<T[key][0]> 👈 Triggers Typescript infinite loop error?
-		: {
-			[element in key]: MapSetToType<T[element]>
-		} : "error: rifle"
-	}[keyof T]
-
-	export namespace Types {
-		export type MapToType<T> =
+		type ValuesActions = [...Definitions["values"], ...Definitions["actions"]]
+		type Raw = {
+			[returnType in Types]: {
+				[index in `${number}` & keyof ValuesActions as ExtractParameters<Extract<ValuesActions[index]["functionSignatures"][number], { returnType: returnType }>["parameterTypes"]> extends never ? never : ValuesActions[index]["name"]]:
+				ExtractParameters<({ returnType: returnType } & ValuesActions[index]["functionSignatures"][number])["parameterTypes"]>
+			}
+		} & {
+			Void: {
+				[index in `${number}` & keyof ValuesActions as ExtractParameters<Exclude<ValuesActions[index]["functionSignatures"][number], { returnType: any }>["parameterTypes"]> extends never ? never : ValuesActions[index]["name"]]:
+				ExtractParameters<Exclude<ValuesActions[index]["functionSignatures"][number], { returnType: any }>["parameterTypes"]>
+			}
+		}
+		type GenerateBlockFormat<T> = {
+			[key in keyof T]: T[key] extends readonly [...any[]] ?
+			T[key] extends readonly [] ? key
+			// : T[key] extends readonly [any] ? MapToType<T[key][0]> 👈 Triggers Typescript infinite loop error?
+			: {
+				[element in key]: MapSetToType<T[element]>
+			} : never
+		}[keyof T];
+		type MapSetToType<T, Result = {
+			-readonly [index in keyof T]: MapToType<T[index]>
+		}> = Result;
+		type MapToType<T> =
 			T extends "Any" ? Any
 			: T extends "String" ? String
 			: T extends "Number" ? Number
@@ -78,32 +68,35 @@ namespace Portal {
 			: T extends "Message" ? Message
 			: T extends "Enum_RestrictedInputs" ? Enum_RestrictedInputs
 			: T extends "Enum_ResupplyTypes" ? Enum_ResupplyTypes
-			: "err"
-		export type String = string | GenerateBlockFormat<Values["String"]>
-		export type Number = number | GenerateBlockFormat<Values["Number"]>
-		export type Boolean = boolean | GenerateBlockFormat<Values["Boolean"]>
-		export type Global = GenerateBlockFormat<Values["Global"]>
-		export type Player = GenerateBlockFormat<Values["Player"]>
-		export type TeamId = GenerateBlockFormat<Values["TeamId"]>
-		export type Vector = GenerateBlockFormat<Values["Vector"]>
-		export type Array = GenerateBlockFormat<Values["Array"]>
-		export type Enum_CharacterGadgets = GenerateBlockFormat<Values["Enum_CharacterGadgets"]>
-		export type Enum_CustomMessages = GenerateBlockFormat<Values["Enum_CustomMessages"]>
-		export type Enum_Factions = GenerateBlockFormat<Values["Enum_Factions"]>
-		export type Enum_InventorySlots = GenerateBlockFormat<Values["Enum_InventorySlots"]>
-		export type Enum_SoldierStateNumber = GenerateBlockFormat<Values["Enum_SoldierStateNumber"]>
-		export type Enum_SoldierStateBool = GenerateBlockFormat<Values["Enum_SoldierStateBool"]>
-		export type Enum_SoldierStateVector = GenerateBlockFormat<Values["Enum_SoldierStateVector"]>
-		export type Enum_PrimaryWeapons = GenerateBlockFormat<Values["Enum_PrimaryWeapons"]>
-		export type Enum_SecondaryWeapons = GenerateBlockFormat<Values["Enum_SecondaryWeapons"]>
-		export type Enum_OpenGadgets = GenerateBlockFormat<Values["Enum_OpenGadgets"]>
-		export type Enum_Throwables = GenerateBlockFormat<Values["Enum_Throwables"]>
-		export type Enum_MeleeWeapons = GenerateBlockFormat<Values["Enum_MeleeWeapons"]>
-		export type Enum_SoldierKits = GenerateBlockFormat<Values["Enum_SoldierKits"]>
-		export type Enum_MedGadgetTypes = GenerateBlockFormat<Values["Enum_MedGadgetTypes"]>
-		export type Message = GenerateBlockFormat<Values["Message"]>
-		export type Enum_RestrictedInputs = GenerateBlockFormat<Values["Enum_RestrictedInputs"]>
-		export type Enum_ResupplyTypes = GenerateBlockFormat<Values["Enum_ResupplyTypes"]>
+			: T extends "Variable" ? Variable
+			: T
+
+		export type Void = GenerateBlockFormat<Raw["Void"]>
+		export type String = string | GenerateBlockFormat<Raw["String"]>
+		export type Number = number | GenerateBlockFormat<Raw["Number"]>
+		export type Boolean = boolean | GenerateBlockFormat<Raw["Boolean"]>
+		export type Global = GenerateBlockFormat<Raw["Global"]>
+		export type Player = GenerateBlockFormat<Raw["Player"]>
+		export type TeamId = GenerateBlockFormat<Raw["TeamId"]>
+		export type Vector = GenerateBlockFormat<Raw["Vector"]>
+		export type Array = GenerateBlockFormat<Raw["Array"]>
+		export type Message = GenerateBlockFormat<Raw["Message"]>
+		export type Enum_CharacterGadgets = GenerateBlockFormat<Raw["Enum_CharacterGadgets"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_CharacterGadgets" })["selectionValues"]
+		export type Enum_CustomMessages = GenerateBlockFormat<Raw["Enum_CustomMessages"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_CustomMessages" })["selectionValues"]
+		export type Enum_Factions = GenerateBlockFormat<Raw["Enum_Factions"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_Factions" })["selectionValues"]
+		export type Enum_InventorySlots = GenerateBlockFormat<Raw["Enum_InventorySlots"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_InventorySlots" })["selectionValues"]
+		export type Enum_SoldierStateNumber = GenerateBlockFormat<Raw["Enum_SoldierStateNumber"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_SoldierStateNumber" })["selectionValues"]
+		export type Enum_SoldierStateBool = GenerateBlockFormat<Raw["Enum_SoldierStateBool"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_SoldierStateBool" })["selectionValues"]
+		export type Enum_SoldierStateVector = GenerateBlockFormat<Raw["Enum_SoldierStateVector"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_SoldierStateVector" })["selectionValues"]
+		export type Enum_PrimaryWeapons = GenerateBlockFormat<Raw["Enum_PrimaryWeapons"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_PrimaryWeapons" })["selectionValues"]
+		export type Enum_SecondaryWeapons = GenerateBlockFormat<Raw["Enum_SecondaryWeapons"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_SecondaryWeapons" })["selectionValues"]
+		export type Enum_OpenGadgets = GenerateBlockFormat<Raw["Enum_OpenGadgets"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_OpenGadgets" })["selectionValues"]
+		export type Enum_Throwables = GenerateBlockFormat<Raw["Enum_Throwables"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_Throwables" })["selectionValues"]
+		export type Enum_MeleeWeapons = GenerateBlockFormat<Raw["Enum_MeleeWeapons"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_MeleeWeapons" })["selectionValues"]
+		export type Enum_SoldierKits = GenerateBlockFormat<Raw["Enum_SoldierKits"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_SoldierKits" })["selectionValues"]
+		export type Enum_MedGadgetTypes = GenerateBlockFormat<Raw["Enum_MedGadgetTypes"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_MedGadgetTypes" })["selectionValues"]
+		export type Enum_RestrictedInputs = GenerateBlockFormat<Raw["Enum_RestrictedInputs"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_RestrictedInputs" })["selectionValues"]
+		export type Enum_ResupplyTypes = GenerateBlockFormat<Raw["Enum_ResupplyTypes"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_ResupplyTypes" })["selectionValues"]
 		export type Any =
 			| String
 			| Number
@@ -131,21 +124,30 @@ namespace Portal {
 			| Enum_RestrictedInputs
 			| Enum_ResupplyTypes
 	}
-
-	export type SpecialCases = Values["Void"]
-
-	const tester: Types.Boolean =
-
+	export type Procedure = Actions | Array<Actions>
+	export type Actions =
+		| Portal.Values.Void
+		| { While: Values.Boolean, Do: Procedure }
+		| { ForVariable: [variable: Variable, from: Values.Number, to: Values.Number, by: Values.Number], Do: Portal.Values.Void[] }
+		| { If: Values.Boolean, Do: Procedure }
+		| { If: Values.Boolean, Do: Procedure, Else: Procedure }
+		| [{ If: Values.Boolean, Do: Procedure }, ...{ ElseIf: Values.Boolean, Do: Procedure }[], { Else: Procedure }]
+		| "Break"
+		| "Continue"
+	export type Variable =
+		| { type: "Global", variable: string }
+		| { type: "Team", variable: string, for: Values.TeamId }
+		| { type: "Player", variable: string, for: Values.Player }
 	export type Mod = {
 		rules: Array<
 			& {
 				name: string,
-				conditions: Array<Types.Boolean>,
-				actions: Array<Voids>,
+				conditions: Array<Values.Boolean>,
+				actions: Array<Actions>,
 			}
 			& (
 				| {
-					eventType: Events
+					eventType: Exclude<Events, "Ongoing">
 				}
 				| {
 					eventType: "Ongoing",
@@ -154,6 +156,16 @@ namespace Portal {
 			)
 		>,
 	};
+
+	function parseAccessor(value: string, inferredTypes: Types[] | null) {
+		const type = inferredTypes[0].substr("Enum_".length);
+		return [
+			{ type: `${type}Item` },
+			{ id: generateUID() },
+			{ field: { name: "VALUE-0", inner: type } },
+			{ field: { name: "VALUE-1", inner: value } },
+		];
+	}
 
 	function parseVariable(value: Variable): any {
 		return [
@@ -172,15 +184,20 @@ namespace Portal {
 		];
 	}
 
-	function parseFunction(value: Values): any {
-		let [type, parameters] = Object.entries(value)[0]
+	const definitionValuesAndActions = [...portalDefinitions.values, ...portalDefinitions.actions, ...portalDefinitions.controlActions];
+	function parseFunction(value: any, inferredTypes: Types[] | null): any {
+		let [type, parameters] = Object.entries(value)[0];
+		const parameterInferredTypes = (definitionValuesAndActions
+			.find(value => value.name == type).functionSignatures as any)
+			.find((func: any) => inferredTypes == null || inferredTypes.includes(func.returnType)).parameterTypes
+			.map((param: any) => param.parameterTypes.length == 0 ? null : param.parameterTypes);
 		return Array.isArray(parameters) ? [
 			{ type },
 			{ id: generateUID() },
 			...parameters.map((parameter: any, index: number) => ({
 				value: {
 					name: `VALUE-${index}`,
-					block: parseValue(parameter),
+					block: parseValue(parameter, parameterInferredTypes[index]),
 				}
 			}))
 		] : {
@@ -188,13 +205,13 @@ namespace Portal {
 			id: generateUID(),
 			value: {
 				name: "VALUE-0",
-				block: parseValue(parameters),
+				block: parseValue(parameters, parameterInferredTypes[0]),
 			},
 		};
 	}
 
 	function parseProcedure(value: any): any {
-		return toLinkedList("block", Array.isArray(value) ? value.map(parseValue) : [parseValue(value)])
+		return toLinkedList("block", Array.isArray(value) ? value.map(value => parseValue(value, null)) : [parseValue(value, null)])
 	}
 
 	function parseIfStatement(value: any): any {
@@ -205,7 +222,7 @@ namespace Portal {
 					id: generateUID(),
 					value: {
 						name: "VALUE-0",
-						block: parseValue(value.If),
+						block: parseValue(value.If, null),
 					},
 					statement: {
 						name: "DO",
@@ -217,7 +234,7 @@ namespace Portal {
 				{ type: "If" },
 				{ id: generateUID() },
 				{ mutation: { else: 1 } },
-				{ value: { name: "VALUE-0", block: parseValue(value.If) } },
+				{ value: { name: "VALUE-0", block: parseValue(value.If, null) } },
 				{
 					statement: {
 						name: "DO",
@@ -242,7 +259,7 @@ namespace Portal {
 					else: 1
 				}
 			},
-			{ value: { name: "VALUE-0", block: parseValue(value[0].If) } },
+			{ value: { name: "VALUE-0", block: parseValue(value[0].If, null) } },
 			{
 				statement: {
 					name: "DO",
@@ -252,7 +269,7 @@ namespace Portal {
 			...elseIfs.flatMap((elseIf: any, index: number) => [{
 				statement: {
 					name: `IF${index + 1}`,
-					block: parseValue(elseIf.ElseIf),
+					block: parseValue(elseIf.ElseIf, null),
 				}
 			},
 			{
@@ -271,7 +288,7 @@ namespace Portal {
 	}
 
 	function parseLoopStatement(value: any): any {
-		const result = parseFunction(value);
+		const result = parseFunction(value, null);
 		const statement = {
 			name: "DO",
 			...parseProcedure(value.Do),
@@ -288,25 +305,24 @@ namespace Portal {
 		};
 	}
 
-	function tryParseAccessor(value: string) {
-		const filteredAccessors = Object
-			.entries(playerStateAccessors)
-			.filter(([_, names]) => names.findIndex(name => name == value) >= 0)
-		if (filteredAccessors.length > 0) {
-			const [type] = filteredAccessors[0];
-			return [
-				{ type: `${type}Item` },
-				{ id: generateUID() },
-				{ field: { name: "VALUE-0", inner: type } },
-				{ field: { name: "VALUE-1", inner: value } },
-			];
-		}
-		return false;
-	}
-
-	function parseValue(value: Values): any {
+	function parseValue(value: any, inferredTypes: Types[] | null): any {
 		if (typeof value == "string") {
-			return tryParseAccessor(value) || {
+			if (inferredTypes != null) {
+				if (inferredTypes.find(inferredType => inferredType.includes("Enum_"))) {
+					return parseAccessor(value, inferredTypes);
+				}
+				if (inferredTypes.includes("String")) {
+					return {
+						type: "Text",
+						id: generateUID(),
+						field: {
+							name: "TEXT",
+							inner: value,
+						},
+					};
+				}
+			}
+			return {
 				type: value,
 				id: generateUID(),
 			};
@@ -342,7 +358,7 @@ namespace Portal {
 				return parseLoopStatement(value);
 			}
 			else {
-				return parseFunction(value);
+				return parseFunction(value, inferredTypes);
 			}
 		}
 		return { "error": true };
@@ -373,7 +389,7 @@ namespace Portal {
 		return (Math.random() + 1).toString(36).substring(2);
 	}
 
-	export function toBlockly(mod: PortalMod): any {
+	export function toBlockly(mod: Portal.Mod): any {
 		const { rules } = mod;
 		return {
 			block: {
@@ -401,7 +417,7 @@ namespace Portal {
 									type: "conditionBlock",
 									value: {
 										name: "CONDITION",
-										block: parseValue(condition),
+										block: parseValue(condition, null),
 									},
 								}))),
 							}
@@ -410,7 +426,7 @@ namespace Portal {
 							statement:
 							{
 								name: "ACTIONS",
-								...toLinkedList("block", rule.actions.map(parseValue)),
+								...toLinkedList("block", rule.actions.map(action => parseValue(action, null))),
 							}
 						},
 					]))),
@@ -418,41 +434,6 @@ namespace Portal {
 			},
 		};
 	}
-}
-
-namespace PortalEnhanced {
-
-	type PortalModEnhanced = {
-
-		rules: Array<
-			& {
-				name: string,
-				conditions: Array<Booleans>,
-				actions: Array<Voids>,
-			}
-			& (
-				| {
-					eventType:
-					| "OnGameModeEnding"
-					| "OnGameModeStarted"
-					| "OnMandown"
-					| "OnPlayerDeployed"
-					| "OnPlayerDied"
-					| "OnPlayerEarnedKill"
-					| "OnPlayerIrreversiblyDead"
-					| "OnPlayerJoinGame"
-					| "OnPlayerLeaveGame"
-					| "OnRevived"
-					| "OnTimeLimitReached",
-				}
-				| {
-					eventType: "Ongoing",
-					objectType: "Global" | "Player" | "Team",
-				}
-			)
-		>,
-	}
-
 }
 
 namespace Blockly {
@@ -482,31 +463,15 @@ namespace Blockly {
 	}
 }
 
-function IncrementPlayerScore(skip = 1): Voids {
-	return { SetGamemodeScore: ["EventPlayer", { Add: [{ GetGamemodeScore: "EventPlayer" }, skip] }] };
+export function buildPortalMod(mod: Portal.Mod) {
+	const blocklyOutput = Portal.toBlockly(mod);
+	const xmlOutput = Blockly.toXML(blocklyOutput);
+
+	(async () => {
+		await new Promise(resolve => fs.writeFile('output-intermediate.json', JSON.stringify(blocklyOutput, null, 4), resolve));
+		await new Promise(resolve => fs.writeFile('output-formatted.xml', xmlFormat(xmlOutput), resolve));
+		await new Promise(resolve => fs.writeFile('output-useable.xml', xmlOutput, resolve));
+		console.log(`New files generated @ ${new Date().toTimeString()}`);
+		console.log(`Once you copy the contents of \`output-useable.xml\`, You can \`Paste From Clipboard\` in Battlefield Portal using the Chrome Extension \`BF2042 Portal Extensions\``);
+	})();
 }
-
-const exampleMod: Portal.Mod = {
-	rules: [
-		{
-			name: "Game Start",
-			eventType: "OnGameModeStarted",
-			conditions: [
-				{ And: [{ IsFaction, "Boolean"] }
-			],
-			actions: [
-				// { DisplayGameModeMessage: [
-			],
-		}
-	],
-};
-
-const blocklyOutput = Portal.toBlockly(exampleMod);
-const xmlOutput = Blockly.toXML(blocklyOutput);
-
-(async () => {
-	await new Promise(resolve => fs.writeFile('output-intermediate.json', JSON.stringify(blocklyOutput, null, 4), resolve));
-	await new Promise(resolve => fs.writeFile('output-formatted.xml', xmlFormat(xmlOutput), resolve));
-	await new Promise(resolve => fs.writeFile('output-useable.xml', xmlOutput, resolve));
-	console.log(`New files generated @ ${new Date().toTimeString()}`);
-})();

@@ -1,6 +1,6 @@
 // This json data is directly scraped from Battlefield Portal
 
-export const definitions = <const>{
+export const portalDefinitions = <const>{
     "objects": [
         {
             "name": "Global",
