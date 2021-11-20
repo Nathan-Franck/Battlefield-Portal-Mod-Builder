@@ -2,6 +2,8 @@
 
 ![Text Representation is 1-to-1 with Visual Representation](showcase.png)
 
+Use the full power of Typescript to construct your Battlefield Portal Mod!
+
 ## 🛠 Usage
 
 * Run `npm install` to initialize the project
