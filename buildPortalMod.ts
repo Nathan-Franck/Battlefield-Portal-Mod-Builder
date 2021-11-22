@@ -14,11 +14,15 @@ export namespace Portal {
 		}
 	}
 	export type Types = Definitions["types"][number];
+	
 	export namespace Values {
+
 		type ExtractParameters<T> = {
 			[key in keyof T]: T[key] extends { parameterTypes: any } ? T[key]["parameterTypes"] extends readonly [] ? "Any" : T[key]["parameterTypes"][number] : never
 		}
-		type ValuesActions = [...Definitions["values"], ...Definitions["actions"]]
+		type Values = Definitions["values"];
+		type Actions = Definitions["actions"];
+		type ValuesActions = [...Values, ...Actions]
 		type Raw = {
 			[returnType in Types]: {
 				[index in `${number}` & keyof ValuesActions as ExtractParameters<Extract<ValuesActions[index]["functionSignatures"][number], { returnType: returnType }>["parameterTypes"]> extends never ? never : ValuesActions[index]["name"]]:
@@ -26,8 +30,13 @@ export namespace Portal {
 			}
 		} & {
 			Void: {
-				[index in `${number}` & keyof ValuesActions as ExtractParameters<Exclude<ValuesActions[index]["functionSignatures"][number], { returnType: any }>["parameterTypes"]> extends never ? never : ValuesActions[index]["name"]]:
-				ExtractParameters<Exclude<ValuesActions[index]["functionSignatures"][number], { returnType: any }>["parameterTypes"]>
+				[index in `${number}` & keyof Actions as ExtractParameters<Exclude<Actions[index]["functionSignatures"][number], { returnType: any }>["parameterTypes"]> extends never ? never : Actions[index]["name"]]:
+				ExtractParameters<Exclude<Actions[index]["functionSignatures"][number], { returnType: any }>["parameterTypes"]>
+			}
+		} & {
+			Unknown: {
+				[index in `${number}` & keyof Values as ExtractParameters<Exclude<Values[index]["functionSignatures"][number], { returnType: any }>["parameterTypes"]> extends never ? never : Values[index]["name"]]:
+				ExtractParameters<Exclude<Values[index]["functionSignatures"][number], { returnType: any }>["parameterTypes"]>
 			}
 		}
 		type GenerateBlockFormat<T> = {
@@ -70,33 +79,33 @@ export namespace Portal {
 			: T extends "Enum_ResupplyTypes" ? Enum_ResupplyTypes
 			: T extends "Variable" ? Variable
 			: T
-
+		export type Unknown = GenerateBlockFormat<Raw["Unknown"]>
 		export type Void = GenerateBlockFormat<Raw["Void"]>
-		export type String = string | GenerateBlockFormat<Raw["String"]>
-		export type Number = number | GenerateBlockFormat<Raw["Number"]>
-		export type Boolean = boolean | GenerateBlockFormat<Raw["Boolean"]>
-		export type Global = GenerateBlockFormat<Raw["Global"]>
-		export type Player = GenerateBlockFormat<Raw["Player"]>
-		export type TeamId = GenerateBlockFormat<Raw["TeamId"]>
-		export type Vector = GenerateBlockFormat<Raw["Vector"]>
-		export type Array = GenerateBlockFormat<Raw["Array"]>
-		export type Message = GenerateBlockFormat<Raw["Message"]>
-		export type Enum_CharacterGadgets = GenerateBlockFormat<Raw["Enum_CharacterGadgets"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_CharacterGadgets" })["selectionValues"]
-		export type Enum_CustomMessages = GenerateBlockFormat<Raw["Enum_CustomMessages"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_CustomMessages" })["selectionValues"]
-		export type Enum_Factions = GenerateBlockFormat<Raw["Enum_Factions"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_Factions" })["selectionValues"]
-		export type Enum_InventorySlots = GenerateBlockFormat<Raw["Enum_InventorySlots"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_InventorySlots" })["selectionValues"]
-		export type Enum_SoldierStateNumber = GenerateBlockFormat<Raw["Enum_SoldierStateNumber"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_SoldierStateNumber" })["selectionValues"]
-		export type Enum_SoldierStateBool = GenerateBlockFormat<Raw["Enum_SoldierStateBool"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_SoldierStateBool" })["selectionValues"]
-		export type Enum_SoldierStateVector = GenerateBlockFormat<Raw["Enum_SoldierStateVector"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_SoldierStateVector" })["selectionValues"]
-		export type Enum_PrimaryWeapons = GenerateBlockFormat<Raw["Enum_PrimaryWeapons"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_PrimaryWeapons" })["selectionValues"]
-		export type Enum_SecondaryWeapons = GenerateBlockFormat<Raw["Enum_SecondaryWeapons"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_SecondaryWeapons" })["selectionValues"]
-		export type Enum_OpenGadgets = GenerateBlockFormat<Raw["Enum_OpenGadgets"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_OpenGadgets" })["selectionValues"]
-		export type Enum_Throwables = GenerateBlockFormat<Raw["Enum_Throwables"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_Throwables" })["selectionValues"]
-		export type Enum_MeleeWeapons = GenerateBlockFormat<Raw["Enum_MeleeWeapons"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_MeleeWeapons" })["selectionValues"]
-		export type Enum_SoldierKits = GenerateBlockFormat<Raw["Enum_SoldierKits"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_SoldierKits" })["selectionValues"]
-		export type Enum_MedGadgetTypes = GenerateBlockFormat<Raw["Enum_MedGadgetTypes"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_MedGadgetTypes" })["selectionValues"]
-		export type Enum_RestrictedInputs = GenerateBlockFormat<Raw["Enum_RestrictedInputs"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_RestrictedInputs" })["selectionValues"]
-		export type Enum_ResupplyTypes = GenerateBlockFormat<Raw["Enum_ResupplyTypes"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_ResupplyTypes" })["selectionValues"]
+		export type String = string | GenerateBlockFormat<Raw["String"]> | Unknown
+		export type Number = number | GenerateBlockFormat<Raw["Number"]> | Unknown
+		export type Boolean = boolean | GenerateBlockFormat<Raw["Boolean"]> | Unknown
+		export type Global = GenerateBlockFormat<Raw["Global"]> | Unknown
+		export type Player = GenerateBlockFormat<Raw["Player"]> | Unknown
+		export type TeamId = GenerateBlockFormat<Raw["TeamId"]> | Unknown
+		export type Vector = GenerateBlockFormat<Raw["Vector"]> | Unknown
+		export type Array = GenerateBlockFormat<Raw["Array"]> | Unknown
+		export type Message = GenerateBlockFormat<Raw["Message"]> | Unknown
+		export type Enum_CharacterGadgets = GenerateBlockFormat<Raw["Enum_CharacterGadgets"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_CharacterGadgets" })["selectionValues"] | Unknown
+		export type Enum_CustomMessages = GenerateBlockFormat<Raw["Enum_CustomMessages"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_CustomMessages" })["selectionValues"] | Unknown
+		export type Enum_Factions = GenerateBlockFormat<Raw["Enum_Factions"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_Factions" })["selectionValues"] | Unknown
+		export type Enum_InventorySlots = GenerateBlockFormat<Raw["Enum_InventorySlots"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_InventorySlots" })["selectionValues"] | Unknown
+		export type Enum_SoldierStateNumber = GenerateBlockFormat<Raw["Enum_SoldierStateNumber"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_SoldierStateNumber" })["selectionValues"] | Unknown
+		export type Enum_SoldierStateBool = GenerateBlockFormat<Raw["Enum_SoldierStateBool"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_SoldierStateBool" })["selectionValues"] | Unknown
+		export type Enum_SoldierStateVector = GenerateBlockFormat<Raw["Enum_SoldierStateVector"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_SoldierStateVector" })["selectionValues"] | Unknown
+		export type Enum_PrimaryWeapons = GenerateBlockFormat<Raw["Enum_PrimaryWeapons"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_PrimaryWeapons" })["selectionValues"] | Unknown
+		export type Enum_SecondaryWeapons = GenerateBlockFormat<Raw["Enum_SecondaryWeapons"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_SecondaryWeapons" })["selectionValues"] | Unknown
+		export type Enum_OpenGadgets = GenerateBlockFormat<Raw["Enum_OpenGadgets"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_OpenGadgets" })["selectionValues"] | Unknown
+		export type Enum_Throwables = GenerateBlockFormat<Raw["Enum_Throwables"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_Throwables" })["selectionValues"] | Unknown
+		export type Enum_MeleeWeapons = GenerateBlockFormat<Raw["Enum_MeleeWeapons"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_MeleeWeapons" })["selectionValues"] | Unknown
+		export type Enum_SoldierKits = GenerateBlockFormat<Raw["Enum_SoldierKits"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_SoldierKits" })["selectionValues"] | Unknown
+		export type Enum_MedGadgetTypes = GenerateBlockFormat<Raw["Enum_MedGadgetTypes"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_MedGadgetTypes" })["selectionValues"] | Unknown
+		export type Enum_RestrictedInputs = GenerateBlockFormat<Raw["Enum_RestrictedInputs"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_RestrictedInputs" })["selectionValues"] | Unknown
+		export type Enum_ResupplyTypes = GenerateBlockFormat<Raw["Enum_ResupplyTypes"]> | (SelectionLists[keyof SelectionLists] & { returnType: "Enum_ResupplyTypes" })["selectionValues"] | Unknown
 		export type Any =
 			| String
 			| Number
@@ -123,6 +132,7 @@ export namespace Portal {
 			| Message
 			| Enum_RestrictedInputs
 			| Enum_ResupplyTypes
+
 	}
 	export type Procedure = Actions | Array<Actions>
 	export type Actions =
